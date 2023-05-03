@@ -1,67 +1,123 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  static const String _title = 'Movie recomendation system';
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+    return const MaterialApp(
+      title: _title,
+      home: MyStatefulWidget(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class MyStatefulWidget extends StatefulWidget {
+  const MyStatefulWidget({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MyStatefulWidget> createState() => _MyStatefulWidgetState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
- final List<String> entries = <String>['65', '65', '65'];
-@override
+class _MyStatefulWidgetState extends State<MyStatefulWidget> {
+  int _selectedIndex = 0;
+  final ScrollController _homeController = ScrollController();
+
+  Widget _listViewBody() {
+    return ListView.separated(
+        controller: _homeController,
+        itemBuilder: (BuildContext context, int index) {
+          return Center(
+            child: Image.asset('assets/images/65.jpg')
+          );
+        },
+        separatorBuilder: (BuildContext context, int index) => const Divider(
+              thickness: 1,
+            ),
+        itemCount: 50);
+  }
+
+  @override
   Widget build(BuildContext context) {
-  return ListView.separated(
-    padding: const EdgeInsets.all(8),
-    itemCount: 3,
-    itemBuilder: (BuildContext context, int index) {
-    return Container(
-        height: 400,
-        color: const Color.fromARGB(255, 14, 88, 4),
-        child: Image.asset('assets/images/65.jpg'),
-      );
-    },
-    separatorBuilder: (BuildContext context, int index) => const Divider(),
-  );
-}
+    return Scaffold(
+      body: _listViewBody(),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home,color: Colors.black),
+            label: 'Home'
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.replay_circle_filled_outlined,color: Colors.black),
+            label: 'Recently Watched'
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.recommend,color: Colors.black),
+            label: 'Recommendation'
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.logout,color: Colors.black),
+            label: 'Log Out'
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: const Color.fromARGB(255, 8, 77, 23),
+        onTap: (int index) {
+          switch (index) {
+            case 0:
+              // only scroll to top when current index is selected.
+              if (_selectedIndex == index) {
+                _homeController.animateTo(
+                  0.0,
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeOut,
+                );
+              }
+              break;
+            case 1:
+              // only scroll to top when current index is selected.
+              if (_selectedIndex == index) {
+                _homeController.animateTo(
+                  0.0,
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeOut,
+                );
+              }
+              break;
+            case 2:
+              // only scroll to top when current index is selected.
+              if (_selectedIndex == index) {
+                _homeController.animateTo(
+                  0.0,
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeOut,
+                );
+              }
+              break;
+            case 3:
+              // only scroll to top when current index is selected.
+              if (_selectedIndex == index) {
+                _homeController.animateTo(
+                  0.0,
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeOut,
+                );
+              }
+              break;
+          }
+          setState(
+            () {
+              _selectedIndex = index;
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  
 }
