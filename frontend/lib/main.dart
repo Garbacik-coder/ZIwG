@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+
 void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
@@ -24,6 +25,7 @@ class MyStatefulWidget extends StatefulWidget {
 }
 
 class _MyStatefulWidgetState extends State<MyStatefulWidget> {
+  final TextEditingController _searchController = TextEditingController();
   int _selectedIndex = 0;
   final ScrollController _homeController = ScrollController();
 
@@ -38,12 +40,33 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
         separatorBuilder: (BuildContext context, int index) => const Divider(
               thickness: 1,
             ),
-        itemCount: 50);
+        itemCount: 5);
+  }
+
+  void _searchMovies(String searchText) {
+    print("do something");
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+       appBar: AppBar(
+        title: TextField(
+          controller: _searchController,
+          onChanged: _searchMovies,
+          decoration: InputDecoration(
+            hintText: "Search Movies",
+            border: InputBorder.none,
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.clear, color: Colors.black),
+              onPressed: () {
+                _searchController.clear();
+                _searchMovies("");
+              },
+            ),
+          ),
+        ),
+      ),
       body: _listViewBody(),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
