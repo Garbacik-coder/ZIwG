@@ -1,6 +1,7 @@
 import 'dart:ffi';
 
 import 'package:flutter/material.dart';
+import 'package:frontend/movie_screen.dart';
 
 class Movie {
   String title;
@@ -49,60 +50,68 @@ class MovieTile extends StatelessWidget {
     final textBoxMargin =
         MediaQuery.of(context).size.width * textBoxMarginProportion;
 
-    return Container(
-      margin: EdgeInsets.all(tileMargin),
-      child: AspectRatio(
-        aspectRatio: imageAspectRatio,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(tileBorderRadius),
-          child: Stack(
-            children: [
-              Image.network(
-                movie.imageUrl,
-                fit: BoxFit.cover,
-                width: double.infinity,
-              ),
-              const Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.transparent,
-                        Colors.black,
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: [0.7, 1.0],
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context)
+            .push(MaterialPageRoute(builder: (BuildContext context) {
+          return MovieScreen(movie: movie);
+        }));
+      },
+      child: Container(
+        margin: EdgeInsets.all(tileMargin),
+        child: AspectRatio(
+          aspectRatio: imageAspectRatio,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(tileBorderRadius),
+            child: Stack(
+              children: [
+                Image.network(
+                  movie.imageUrl,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                ),
+                const Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.transparent,
+                          Colors.black,
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        stops: [0.7, 1.0],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(textBoxMargin),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Text(
-                      movie.title,
-                      textScaleFactor: titleScaleFactor,
-                      style: const TextStyle(
-                        color: Colors.white,
+                Padding(
+                  padding: EdgeInsets.all(textBoxMargin),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Text(
+                        movie.title,
+                        textScaleFactor: titleScaleFactor,
+                        style: const TextStyle(
+                          color: Colors.white,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      movieInfo,
-                      textScaleFactor: infoScaleFactor,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      Text(
+                        movieInfo,
+                        textScaleFactor: infoScaleFactor,
+                        style: const TextStyle(
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
