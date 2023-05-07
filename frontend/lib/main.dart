@@ -93,80 +93,6 @@ class RootWidget extends StatefulWidget {
 class _RootWidgetState extends State<RootWidget> {
   int _selectedIndex = 0;
   final ScrollController _homeController = ScrollController();
-  bool _isStarred = false;
-
-  Widget _listViewBody() {
-    return ListView.separated(
-      controller: _homeController,
-      itemBuilder: (BuildContext context, int index) {
-        return Center(
-          child: GestureDetector(
-            child: Image.asset('assets/images/65.jpg'),
-            onTap: () {
-              _showRatingDialog();
-            },
-          ),
-        );
-      },
-      separatorBuilder: (BuildContext context, int index) => const Divider(
-        thickness: 1,
-      ),
-      itemCount: 5,
-    );
-  }
-
-  Future<void> _showRatingDialog() async {
-    int rating = 0;
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Rate this image'),
-          content: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(
-                  5,
-                  (index) {
-                    return IconButton(
-                      icon: Icon(
-                        index < rating ? Icons.star : Icons.star_border,
-                        color: index < rating ? Colors.yellow : null,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          rating = index + 1;
-                        });
-                      },
-                    );
-                  },
-                ),
-              );
-            },
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('CANCEL'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('OK'),
-              onPressed: () {
-                setState(() {
-                  _isStarred = true;
-                  print(rating);
-                });
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -175,6 +101,7 @@ class _RootWidgetState extends State<RootWidget> {
 
     return Scaffold(
       body: ListView.builder(
+        controller: _homeController,
         itemCount: 2,
         itemBuilder: (context, index) {
           if (index == 0) {
@@ -330,3 +257,78 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
     );
   }
 }
+
+  // bool _isStarred = false;
+
+  // Widget _listViewBody() {
+  //   return ListView.separated(
+  //     controller: _homeController,
+  //     itemBuilder: (BuildContext context, int index) {
+  //       return Center(
+  //         child: GestureDetector(
+  //           child: Image.asset('assets/images/65.jpg'),
+  //           onTap: () {
+  //             _showRatingDialog();
+  //           },
+  //         ),
+  //       );
+  //     },
+  //     separatorBuilder: (BuildContext context, int index) => const Divider(
+  //       thickness: 1,
+  //     ),
+  //     itemCount: 5,
+  //   );
+  // }
+
+  // Future<void> _showRatingDialog() async {
+  //   int rating = 0;
+  //   await showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: Text('Rate this image'),
+  //         content: StatefulBuilder(
+  //           builder: (BuildContext context, StateSetter setState) {
+  //             return Row(
+  //               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //               children: List.generate(
+  //                 5,
+  //                 (index) {
+  //                   return IconButton(
+  //                     icon: Icon(
+  //                       index < rating ? Icons.star : Icons.star_border,
+  //                       color: index < rating ? Colors.yellow : null,
+  //                     ),
+  //                     onPressed: () {
+  //                       setState(() {
+  //                         rating = index + 1;
+  //                       });
+  //                     },
+  //                   );
+  //                 },
+  //               ),
+  //             );
+  //           },
+  //         ),
+  //         actions: <Widget>[
+  //           TextButton(
+  //             child: Text('CANCEL'),
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //             },
+  //           ),
+  //           TextButton(
+  //             child: Text('OK'),
+  //             onPressed: () {
+  //               setState(() {
+  //                 _isStarred = true;
+  //                 print(rating);
+  //               });
+  //               Navigator.of(context).pop();
+  //             },
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
