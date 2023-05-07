@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'movie_tile.dart';
 
-List<Movie> movies = [
+List<Movie> moviesPredefined = [
   Movie(
     "The Shawshank Redemption",
     "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.",
@@ -91,8 +91,18 @@ class RootWidget extends StatefulWidget {
 }
 
 class _RootWidgetState extends State<RootWidget> {
-  int _selectedIndex = 0;
   final ScrollController _homeController = ScrollController();
+  int _selectedIndex = 0;
+  List<Movie> movies = moviesPredefined;
+
+  void searchMovies(String searchStr) {
+    setState(() {
+      final String lowerSearchStr = searchStr.toLowerCase();
+      movies = moviesPredefined
+          .where((movie) => movie.title.toLowerCase().contains(lowerSearchStr))
+          .toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,8 +125,9 @@ class _RootWidgetState extends State<RootWidget> {
                     decoration: BoxDecoration(
                         color: Colors.teal,
                         borderRadius: BorderRadius.circular(listBorderRadius)),
-                    child: const TextField(
-                      decoration: InputDecoration(
+                    child: TextField(
+                      onChanged: searchMovies,
+                      decoration: const InputDecoration(
                         hintText: "search movies",
                         border: InputBorder.none,
                         suffixIcon: Icon(Icons.search, color: Colors.black),
@@ -137,7 +148,7 @@ class _RootWidgetState extends State<RootWidget> {
               child: ListView.builder(
                 shrinkWrap: true,
                 physics: const ClampingScrollPhysics(),
-                itemCount: 6,
+                itemCount: movies.length + 1,
                 itemBuilder: (context, index) {
                   if (index == 0) {
                     return Container(
