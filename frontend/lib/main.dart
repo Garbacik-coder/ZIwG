@@ -64,6 +64,8 @@ List<Movie> movies = [
   ),
 ];
 
+final double titleTextScaleFactor = 4.0;
+
 void main() => runApp(const MovieRecommendationApp());
 
 class MovieRecommendationApp extends StatelessWidget {
@@ -73,9 +75,10 @@ class MovieRecommendationApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: _title,
-      home: RootWidget(),
+      theme: ThemeData(scaffoldBackgroundColor: Colors.teal[800]),
+      home: const RootWidget(),
     );
   }
 }
@@ -167,15 +170,67 @@ class _RootWidgetState extends State<RootWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final listBorderRadius =
+        MediaQuery.of(context).size.width * borderRadiusProportion;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const SearchBarWidget(),
-      ),
       body: ListView.builder(
-        itemCount: 5,
+        itemCount: 2,
         itemBuilder: (context, index) {
-          final movie = movies[index];
-          return MovieTile(movie: movie);
+          if (index == 0) {
+            return Container(
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 12),
+              child: Column(
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                    decoration: BoxDecoration(
+                        color: Colors.teal,
+                        borderRadius: BorderRadius.circular(listBorderRadius)),
+                    child: const TextField(
+                      decoration: InputDecoration(
+                        hintText: "search movies",
+                        border: InputBorder.none,
+                        suffixIcon: Icon(Icons.search, color: Colors.black),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 24,
+                  ),
+                ],
+              ),
+            );
+          } else {
+            return Container(
+              decoration: BoxDecoration(
+                  color: Colors.teal,
+                  borderRadius: BorderRadius.circular(listBorderRadius)),
+              child: ListView.builder(
+                shrinkWrap: true,
+                physics: const ClampingScrollPhysics(),
+                itemCount: 6,
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return Container(
+                      padding: const EdgeInsets.all(20),
+                      child: const Text(
+                        "Recommended",
+                        textScaleFactor: titleScaleFactor,
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
+                      ),
+                    );
+                  } else {
+                    final movie = movies[index - 1];
+                    return MovieTile(movie: movie);
+                  }
+                },
+              ),
+            );
+          }
         },
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -242,6 +297,7 @@ class _RootWidgetState extends State<RootWidget> {
   }
 }
 
+// legacy code, may be useful when implementing searchbar logic
 class SearchBarWidget extends StatefulWidget {
   const SearchBarWidget({super.key});
 
