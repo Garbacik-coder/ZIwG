@@ -20,6 +20,20 @@ class _MovieScreenState extends State<MovieScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Size deviceSize = MediaQuery.of(context).size;
+    double deviceWidth = deviceSize.width;
+    double deviceHeight = deviceSize.height;
+
+    double imageHeight = deviceHeight * 0.5;
+    double endPaddingHeight = deviceHeight * 0.2;
+    double cardPadding = deviceWidth * 0.06;
+    double borderRadius = deviceWidth * 0.1;
+    double titleScaleFactor = 3.0;
+    double descriptionScaleFactor = 1.35;
+    double otherScaleFactor = 1.2;
+    double afterTitleGap = deviceHeight * 0.015;
+    double afterOtherGap = deviceHeight * 0.01;
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -36,17 +50,17 @@ class _MovieScreenState extends State<MovieScreen> {
             child: Column(
               children: [
                 SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.5,
+                  height: imageHeight,
                 ),
                 Column(
                   children: [
                     Container(
-                      padding: EdgeInsets.all(20),
+                      padding: EdgeInsets.all(cardPadding),
                       decoration: BoxDecoration(
                         color: Colors.teal.withOpacity(0.75),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(40),
-                          topRight: Radius.circular(40),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(borderRadius),
+                          topRight: Radius.circular(borderRadius),
                         ),
                       ),
                       child: Column(
@@ -54,50 +68,50 @@ class _MovieScreenState extends State<MovieScreen> {
                         children: [
                           Text(
                             widget.movie.title,
-                            textScaleFactor: 3,
+                            textScaleFactor: titleScaleFactor,
                             style: const TextStyle(color: Colors.white),
                           ),
-                          const SizedBox(
-                            height: 15,
+                          SizedBox(
+                            height: afterTitleGap,
                           ),
                           Text(
                             textAlign: TextAlign.justify,
                             widget.movie.description,
-                            textScaleFactor: 1.35,
+                            textScaleFactor: descriptionScaleFactor,
                             style: const TextStyle(color: Colors.white),
                           ),
-                          const SizedBox(
-                            height: 10,
+                          SizedBox(
+                            height: afterOtherGap,
                           ),
                           Text(
                             "rating: ${widget.movie.rating}",
-                            textScaleFactor: 1.2,
+                            textScaleFactor: otherScaleFactor,
                             style: const TextStyle(color: Colors.white),
                           ),
                           Text(
                             "year: ${widget.movie.year}",
-                            textScaleFactor: 1.2,
+                            textScaleFactor: otherScaleFactor,
                             style: const TextStyle(color: Colors.white),
                           ),
                           Text(
                             "length: ${widget.movie.length}",
-                            textScaleFactor: 1.2,
+                            textScaleFactor: otherScaleFactor,
                             style: const TextStyle(color: Colors.white),
                           ),
                           Text(
                             "genres: ${widget.movie.genres}",
-                            textScaleFactor: 1.2,
+                            textScaleFactor: otherScaleFactor,
                             style: const TextStyle(color: Colors.white),
                           ),
-                          const SizedBox(
-                            height: 15,
+                          SizedBox(
+                            height: afterTitleGap,
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               IconButton(
-                                padding: EdgeInsets.all(0),
+                                padding: const EdgeInsets.all(0),
                                 onPressed: () {
                                   onWatchlistButtonPressed();
                                 },
@@ -110,7 +124,7 @@ class _MovieScreenState extends State<MovieScreen> {
                                 ),
                               ),
                               IconButton(
-                                padding: EdgeInsets.all(0),
+                                padding: const EdgeInsets.all(0),
                                 onPressed: () {
                                   onRateButtonPressed();
                                 },
@@ -132,8 +146,9 @@ class _MovieScreenState extends State<MovieScreen> {
                         color: Colors.teal.withOpacity(0.75),
                       ),
                       constraints: BoxConstraints.expand(
-                          height: MediaQuery.of(context).size.height * 0.2),
-                    )
+                        height: endPaddingHeight,
+                      ),
+                    ),
                   ],
                 ),
               ],
