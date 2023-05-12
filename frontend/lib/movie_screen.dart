@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:frontend/movie_tile.dart';
 
 class MovieScreen extends StatefulWidget {
-  final Movie movie;
-  const MovieScreen({required this.movie, super.key});
+  Movie movie;
+  MovieScreen({required this.movie, super.key});
 
   @override
   State<MovieScreen> createState() => _MovieScreenState();
@@ -14,9 +15,83 @@ class _MovieScreenState extends State<MovieScreen> {
     // implement
   };
 
-  Function onRateButtonPressed = () {
-    // implement
-  };
+  Future<void> onRateButtonPressed() async {
+    double rating = widget.movie.userRating?.toDouble() ?? 0.0;
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.teal[800],
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text(
+            'Rate this movie',
+            style: TextStyle(
+              color: Colors.white,
+            ),
+          ),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return RatingBar.builder(
+                glow: false,
+                initialRating: rating,
+                minRating: 0.5,
+                direction: Axis.horizontal,
+                allowHalfRating: true,
+                unratedColor: Colors.amber.withAlpha(75),
+                itemCount: 5,
+                itemSize: 45,
+                itemPadding: const EdgeInsets.symmetric(horizontal: 2.0),
+                itemBuilder: (context, _) => const Icon(
+                  Icons.star,
+                  color: Colors.amber,
+                ),
+                onRatingUpdate: (newRating) {
+                  setState(() {
+                    rating = newRating;
+                  });
+                },
+                updateOnDrag: true,
+              );
+            },
+          ),
+          actionsAlignment: MainAxisAlignment.spaceEvenly,
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text(
+                'Remove rating',
+                style: TextStyle(
+                  color: Colors.red[300],
+                ),
+              ),
+              onPressed: () {
+                setState(() {
+                  widget.movie.userRating = null;
+                });
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  widget.movie.userRating = rating.toInt();
+                });
+                Navigator.of(context).pop();
+              },
+              child: const Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -125,9 +200,7 @@ class _MovieScreenState extends State<MovieScreen> {
                               ),
                               IconButton(
                                 padding: const EdgeInsets.all(0),
-                                onPressed: () {
-                                  onRateButtonPressed();
-                                },
+                                onPressed: onRateButtonPressed,
                                 icon: Icon(
                                   Icons.star,
                                   color: widget.movie.isRated
