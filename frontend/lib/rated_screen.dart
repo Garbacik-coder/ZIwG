@@ -2,19 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:frontend/movie_tile.dart';
 import 'package:frontend/movies_predefined.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class RatedScreen extends StatefulWidget {
+  const RatedScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<RatedScreen> createState() => _RatedScreenState();
 }
 
-const double borderRadiusProportion = 0.1;
-
-class _HomeScreenState extends State<HomeScreen> {
+class _RatedScreenState extends State<RatedScreen> {
   final ScrollController controller = ScrollController();
   List<Movie> movies = moviesPredefined;
-  bool isSearchbarFilled = false;
 
   void searchFunction(String searchStr) {
     setState(() {
@@ -22,7 +19,6 @@ class _HomeScreenState extends State<HomeScreen> {
       movies = moviesPredefined
           .where((movie) => movie.title.toLowerCase().contains(lowerSearchStr))
           .toList();
-      isSearchbarFilled = lowerSearchStr.isNotEmpty;
     });
   }
 
@@ -75,10 +71,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (index == 0) {
                   return Container(
                     padding: const EdgeInsets.all(20),
-                    child: Text(
-                      isSearchbarFilled ? "Matching movies" : "Recommended",
+                    child: const Text(
+                      "Rated movies",
                       textScaleFactor: titleScaleFactor,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
                       ),
                     ),

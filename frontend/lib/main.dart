@@ -1,70 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/home_screen.dart';
+import 'package:frontend/movies_predefined.dart';
+import 'package:frontend/watchlist_screen.dart';
+import 'package:frontend/rated_screen.dart';
 import 'movie_tile.dart';
 
-List<Movie> moviesPredefined = [
-  Movie(
-    "The Shawshank Redemption",
-    "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.",
-    "Drama",
-    "9.3",
-    "1994",
-    "2h 22min",
-    "https://upload.wikimedia.org/wikipedia/en/8/81/ShawshankRedemptionMoviePoster.jpg",
-    false,
-    true,
-    9,
-  ),
-  Movie(
-    "The Dark Knight",
-    "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.",
-    "Action, Crime, Drama",
-    "9.0",
-    "2008",
-    "2h 32min",
-    "https://upload.wikimedia.org/wikipedia/en/1/1c/The_Dark_Knight_%282008_film%29.jpg",
-    true,
-    true,
-    10,
-  ),
-  Movie(
-    "Inception",
-    "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.",
-    "Action, Adventure, Sci-Fi",
-    "8.8",
-    "2010",
-    "2h 28min",
-    "https://upload.wikimedia.org/wikipedia/en/2/2e/Inception_%282010%29_theatrical_poster.jpg",
-    true,
-    true,
-    8,
-  ),
-  Movie(
-    "Forrest Gump",
-    "The presidencies of Kennedy and Johnson, the events of Vietnam, Watergate, and other historical events unfold through the perspective of an Alabama man with an IQ of 75, whose only desire is to be reunited with his childhood sweetheart.",
-    "Drama, Romance",
-    "8.8",
-    "1994",
-    "2h 22min",
-    "https://upload.wikimedia.org/wikipedia/en/6/67/Forrest_Gump_poster.jpg",
-    false,
-    true,
-    8,
-  ),
-  Movie(
-    "The Godfather",
-    "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.",
-    "Crime, Drama",
-    "9.2",
-    "1972",
-    "2h 55min",
-    "https://upload.wikimedia.org/wikipedia/en/1/1c/Godfather_ver1.jpg",
-    false,
-    true,
-    9,
-  ),
-];
-
-final double titleTextScaleFactor = 4.0;
+const double titleTextScaleFactor = 4.0;
 
 void main() => runApp(const MovieRecommendationApp());
 
@@ -82,6 +23,12 @@ class MovieRecommendationApp extends StatelessWidget {
     );
   }
 }
+
+const List<Widget> pages = <Widget>[
+  HomeScreen(),
+  WatchlistScreen(),
+  RatedScreen(),
+];
 
 class RootWidget extends StatefulWidget {
   const RootWidget({super.key});
@@ -106,103 +53,43 @@ class _RootWidgetState extends State<RootWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final listBorderRadius =
-        MediaQuery.of(context).size.width * borderRadiusProportion;
-
     return Scaffold(
-      body: ListView.builder(
-        controller: _homeController,
-        itemCount: 2,
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return Container(
-              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 12),
-              child: Column(
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                    decoration: BoxDecoration(
-                        color: Colors.teal,
-                        borderRadius: BorderRadius.circular(listBorderRadius)),
-                    child: TextField(
-                      onChanged: searchMovies,
-                      decoration: const InputDecoration(
-                        hintText: "search movies",
-                        border: InputBorder.none,
-                        suffixIcon: Icon(Icons.search, color: Colors.black),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 24,
-                  ),
-                ],
-              ),
-            );
-          } else {
-            return Container(
-              decoration: BoxDecoration(
-                  color: Colors.teal,
-                  borderRadius: BorderRadius.circular(listBorderRadius)),
-              child: ListView.builder(
-                shrinkWrap: true,
-                physics: const ClampingScrollPhysics(),
-                itemCount: movies.length + 1,
-                itemBuilder: (context, index) {
-                  if (index == 0) {
-                    return Container(
-                      padding: const EdgeInsets.all(20),
-                      child: const Text(
-                        "Recommended",
-                        textScaleFactor: titleScaleFactor,
-                        style: TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
-                    );
-                  } else {
-                    final movie = movies[index - 1];
-                    return MovieTile(movie: movie);
-                  }
-                },
-              ),
-            );
-          }
-        },
-      ),
+      body: pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
+        unselectedItemColor: Colors.grey[400],
+        selectedItemColor: Colors.white,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.teal[800],
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(
               Icons.home,
-              color: Colors.black,
+              size: 40,
             ),
             label: 'Home',
           ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.replay_circle_filled_outlined,
-              color: Colors.black,
+              size: 40,
             ),
-            label: 'Recently Watched',
+            label: 'To watch',
           ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.recommend,
-              color: Colors.black,
+              size: 40,
             ),
-            label: 'Recommendation',
+            label: 'Rated',
           ),
           BottomNavigationBarItem(
               icon: Icon(
                 Icons.logout,
-                color: Colors.black,
+                size: 40,
               ),
               label: 'Log Out'),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: const Color.fromARGB(255, 8, 77, 23),
         onTap: (int index) {
           // only scroll to top when current index is selected.
           if (_selectedIndex == index) {
@@ -224,11 +111,13 @@ class _RootWidgetState extends State<RootWidget> {
               break;
           }
 
-          setState(
-            () {
-              _selectedIndex = index;
-            },
-          );
+          if (index < 3) {
+            setState(
+              () {
+                _selectedIndex = index;
+              },
+            );
+          }
         },
       ),
     );
