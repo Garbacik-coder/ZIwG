@@ -42,16 +42,30 @@ class Movies(Resource):
         
         return [serialize_movie(result[i]['movie']) for i in range(offset, offset + limit)]
 
+class OnWatchlist(Resource):
+    def get(self):
+        user_id = request.args.get('userId')
+        offset = int(request.args.get('offset'))
+        limit = int(request.args.get('limit'))
+
+        def get_on_watchlist(tx, user_id):
+            return list(tx.run(f'MATCH (movie:Movie)-[on:ON_WATCHLIST]->(user:User) WHERE user.userId = {user_id} RETURN movie'))
+
+        db = get_db()
+        result = db.execute_write(get_on_watchlist, user_id)
+
+        return [serialize_movie(result[i]['movie']) for i in range(offset, offset + limit)]
+
 class Rate(Resource):
     def post(self, movieId):
-        userId = request.args.get('userId')
+        user_id = request.args.get('userId')
         rating = request.args.get('rating')
 
         def rate_movie(tx, user_id, movie_id, rating):
             return tx.run(f'MATCH (u:User) MATCH (m:Movie) WHERE u.userId = {user_id} AND m.movieId = {movie_id} CREATE (u)-[r:RATED {{rating: {rating}}}]->(m)')
 
         db = get_db()
-        result = db.execute_write(rate_movie, userId, movieId, rating)
+        result = db.execute_write(rate_movie, user_id, movieId, rating)
         return {}
 
 class Unrate(Resource):
@@ -66,6 +80,7 @@ class Unrate(Resource):
         return {}
 
 api.add_resource(Movies, '/api/movies')
+api.add_resource(OnWatchlist, '/api/movies/on_watchlist')
 api.add_resource(Rate, '/api/movies/<int:movieId>/rate')
 api.add_resource(Unrate, '/api/movies/<int:movieId>/unrate')
 
