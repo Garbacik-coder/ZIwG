@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/movie_tile.dart';
 import 'package:frontend/movies_predefined.dart';
+import 'package:http/http.dart' as http;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,9 +12,17 @@ class HomeScreen extends StatefulWidget {
 
 const double borderRadiusProportion = 0.1;
 
+Future<http.Response> fetchMovies() {
+  final queryParameters = {
+    'offset': 0,
+    'limit': 3,
+  };
+  return http.get(Uri.https('10.0.2.2:8080', '/api/movies', queryParameters));
+}
+
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController controller = ScrollController();
-  List<Movie> movies = moviesPredefined;
+  List<Movie> movies = [];
   bool isSearchbarFilled = false;
 
   void searchFunction(String searchStr) {
