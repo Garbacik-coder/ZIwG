@@ -65,15 +65,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
-    super.initState();
-    fetchData();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final listBorderRadius =
-        MediaQuery.of(context).size.width * borderRadiusProportion;
-
     scrollController.addListener(() {
       var nextPageTrigger = 0.8 * scrollController.position.maxScrollExtent;
 
@@ -85,6 +76,14 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     });
+    super.initState();
+    fetchData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final listBorderRadius =
+        MediaQuery.of(context).size.width * borderRadiusProportion;
 
     return ListView.builder(
       controller: scrollController,
