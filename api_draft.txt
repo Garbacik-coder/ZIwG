@@ -1,0 +1,30 @@
+class Movie {
+  String title;
+  String description;
+  String genres;        // np. "drama" albo "action, family" 
+  double rating;
+  int year;
+  String length;        // np. "2h 37m"
+  String imageUrl;
+  bool isOnWatchlist;
+  bool isRated;
+  int? userRating;      // ocena użytkownika w notacji 1-10 zawsze będzie liczbą całkowitą
+}
+zawiera wszystkie informacje potrzebne do wyświetlenia filmu i interakcji użytkownika z filmem
+
+
+
+endpointy:
+
+typ     przykładowa ścieżka                         argumenty/parametry     zwracane wartości               notki
+
+get     /api/movies                                 offset, limit           lista kilku (np. 10) Movie      offset to indeks z listy filmów, a limit to liczba zwracanych filmów, jak chcemy zwrócić 3 razy po 10 filmów to limit = 10, a offset=[0,1,2]
+get     /api/movies/recommended                     userId, offset, limit   lista kilku (np. 10) Movie
+get     /api/movies/on_watchlist                    userId, offset, limit   lista kilku (np. 10) Movie
+get     /api/movies/rated                           userId, offset, limit   lista kilku (np. 10) Movie
+post    /api/movies/{movieId}/add_to_watchlist      userId                  nowy obiekt Movie               można dodać film już oceniony
+post    /api/movies/{movieId}/remove_from_watchlist userId                  nowy obiekt Movie
+post    /api/movies/{movieId}/rate                  userId, rating          nowy obiekt Movie               równocześnie usuwa z watchlisty
+post    /api/movies/{movieId}/unrate                userId                  nowy obiekt Movie
+[później: rejestracja, logowanie]
+
