@@ -141,6 +141,7 @@ class Unrate(Resource):
         result = db.execute_write(unrate_movie, user_id, movie_id, )
         return {}
 
+
 class AddNewUser(Resource):
     def post(self, user_id):
 
@@ -148,7 +149,7 @@ class AddNewUser(Resource):
             tx.run(f'CREATE (user:User) SET user.userId = {user_id}')
 
         db = get_db()
-        db.create_user(create_user, user_id, user_id, )
+        db.create_user(create_user, user_id)
         return {}
 
 
