@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:frontend/movie_tile.dart';
 import 'package:frontend/movies_predefined.dart';
@@ -12,18 +14,44 @@ class HomeScreen extends StatefulWidget {
 
 const double borderRadiusProportion = 0.1;
 
-Future<http.Response> fetchMovies() {
+Future<List<String>> fetchMovies(int offset, int limit) async {
   final queryParameters = {
-    'offset': 0,
-    'limit': 3,
+    'offset': offset.toString(),
+    'limit': limit.toString(),
   };
-  return http.get(Uri.https('10.0.2.2:8080', '/api/movies', queryParameters));
+  final response =
+      await http.get(Uri.http('10.0.2.2:8080', '/api/movies', queryParameters));
+  final json = jsonDecode(response.body);
+  final parsed = (json as List).map((m) => m["title"] as String).toList();
+  return parsed;
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final ScrollController controller = ScrollController();
-  List<Movie> movies = [];
+  List<Movie> movies = moviesPredefined;
   bool isSearchbarFilled = false;
+
+  bool isLastPage = false;
+  int offset = 0;
+  bool loading = true;
+  final int numberOfMoviesPerRequest = 3;
+  List<String> movieTitles = [];
+  final int nextPageTrigger = 2;
+  ScrollController scrollController = ScrollController();
+
+  Future<void> fetchData() async {
+    try {
+      final additionalMovieTitles =
+          await fetchMovies(offset, numberOfMoviesPerRequest);
+
+      setState(() {
+        loading = false;
+        offset = offset + numberOfMoviesPerRequest;
+        movieTitles.addAll(additionalMovieTitles);
+      });
+    } catch (e) {
+      print("error --> $e");
+    }
+  }
 
   void searchFunction(String searchStr) {
     setState(() {
@@ -36,12 +64,30 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final listBorderRadius =
         MediaQuery.of(context).size.width * borderRadiusProportion;
 
+    scrollController.addListener(() {
+      var nextPageTrigger = 0.8 * scrollController.position.maxScrollExtent;
+
+      if (!loading && scrollController.position.pixels > nextPageTrigger) {
+        setState(() {
+          loading = true;
+          fetchData();
+          print('henloo');
+        });
+      }
+    });
+
     return ListView.builder(
-      controller: controller,
+      controller: scrollController,
       itemCount: 2,
       itemBuilder: (context, index) {
         if (index == 0) {
@@ -79,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ListView.builder(
               shrinkWrap: true,
               physics: const ClampingScrollPhysics(),
-              itemCount: movies.length + 1,
+              itemCount: movieTitles.length + 1,
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return Container(
@@ -93,8 +139,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   );
                 } else {
-                  final movie = movies[index - 1];
-                  return MovieTile(movie: movie);
+                  // final movie = movies[index - 1];
+                  // return MovieTile(movie: movie);
+
+                  // final movieTitle = movies[index - 1].title;
+                  // return MovieTileStub(title: movieTitle);
+
+                  final movieTitle = movieTitles[index - 1];
+                  return MovieTileStub(title: movieTitle);
                 }
               },
             ),

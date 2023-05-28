@@ -118,3 +118,76 @@ class MovieTile extends StatelessWidget {
     );
   }
 }
+
+class MovieTileStub extends StatelessWidget {
+  const MovieTileStub({required this.title, super.key});
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final tileMargin = MediaQuery.of(context).size.width * marginProportion;
+    final tileBorderRadius =
+        MediaQuery.of(context).size.width * borderRadiusProportion;
+    final textBoxMargin =
+        MediaQuery.of(context).size.width * textBoxMarginProportion;
+
+    return Container(
+      margin: EdgeInsets.all(tileMargin),
+      child: AspectRatio(
+        aspectRatio: imageAspectRatio,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(tileBorderRadius),
+          child: Stack(
+            children: [
+              Image.network(
+                'https://live.staticflickr.com/65535/50494067068_98b220b337_b.jpg',
+                fit: BoxFit.cover,
+                width: double.infinity,
+              ),
+              const Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        Colors.black,
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      stops: [0.7, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(textBoxMargin),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Text(
+                      title,
+                      textScaleFactor: titleScaleFactor,
+                      style: const TextStyle(
+                        color: Colors.white,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const Text(
+                      'rating | year | length',
+                      textScaleFactor: infoScaleFactor,
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
