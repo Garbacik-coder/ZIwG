@@ -15,7 +15,7 @@ def get_movies(tx):
     return list(tx.run(f'MATCH (movie:Movie) RETURN movie'))
 
 def insert_is_predicted(tx, user_id, movie_id, prediction):
-    return list(tx.run(f'MATCH (user:User) MATCH (movie:Movie) WHERE user.userId = {user_id} AND movie.movieId = {movie_id} CREATE (movie)-[is_predicted:IS_PREDICTED {{prediction: {prediction}}}]->(user)'))
+    return list(tx.run(f'MATCH (user:User) MATCH (movie:Movie) WHERE user.userId = {user_id} AND movie.movieId = {movie_id} AND NOT (user)-[:RATED]->(movie) CREATE (movie)-[is_predicted:IS_PREDICTED {{prediction: {prediction}}}]->(user)'))
 
 with driver.session() as db:
     users = db.execute_write(get_users)

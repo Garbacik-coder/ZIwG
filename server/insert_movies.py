@@ -10,8 +10,8 @@ driver = GraphDatabase.driver(DATABASE_URL, auth=(DATABASE_USERNAME, DATABASE_PA
 df = pd.read_csv('products.csv')
 df['name'] = df['name'].astype(str).apply(lambda x: x.replace('"', ''))
 
-def insert_movie(tx, movie_id, title, old):
-    return list(tx.run(f'CREATE (movie:Movie) SET movie.movieId = {movie_id}, movie.title = "{title}", movie.old = {old}'))
+def insert_movie(tx, movie_id, title, year, old):
+    return list(tx.run(f'CREATE (movie:Movie) SET movie.movieId = {movie_id}, movie.title = "{title}", movie.year = {year}, movie.old = {old}'))
 
 def insert_genre(tx, name):
     return list(tx.run(f'CREATE (genre:Genre) SET genre.name = "{name}"'))
@@ -28,8 +28,9 @@ with driver.session() as db:
     for index, row in df.iterrows():
         movie_id = row['product']  
         title = row['name']
+        year = row['year']
         old = row['old']
-        result = db.execute_write(insert_movie, movie_id, title, old)
+        result = db.execute_write(insert_movie, movie_id, title, year, old)
         for genre in genres:
             if row[genre] == 1:
                 result = db.execute_write(connect_with_genre, movie_id, genre)
