@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:frontend/movie_tile.dart';
+import 'package:http/http.dart' as http;
 
 class MovieScreen extends StatefulWidget {
   Movie movie;
@@ -11,12 +14,10 @@ class MovieScreen extends StatefulWidget {
 }
 
 class _MovieScreenState extends State<MovieScreen> {
-  Function onWatchlistButtonPressed = () {
-    // implement
-  };
+  late Movie movie = widget.movie;
 
   Future<void> onRateButtonPressed() async {
-    double rating = widget.movie.userRating?.toDouble() ?? 0.0;
+    double rating = movie.userRating?.toDouble() ?? 0.0;
 
     await showDialog(
       context: context,
@@ -36,13 +37,13 @@ class _MovieScreenState extends State<MovieScreen> {
               return RatingBar.builder(
                 glow: false,
                 initialRating: rating,
-                minRating: 0.5,
+                minRating: 1,
                 direction: Axis.horizontal,
                 allowHalfRating: true,
                 unratedColor: Colors.amber.withAlpha(75),
-                itemCount: 5,
-                itemSize: 45,
-                itemPadding: const EdgeInsets.symmetric(horizontal: 2.0),
+                itemCount: 10,
+                itemSize: 25,
+                itemPadding: const EdgeInsets.symmetric(horizontal: 1.0),
                 itemBuilder: (context, _) => const Icon(
                   Icons.star,
                   color: Colors.amber,
@@ -71,18 +72,29 @@ class _MovieScreenState extends State<MovieScreen> {
                   color: Colors.red[300],
                 ),
               ),
-              onPressed: () {
-                setState(() {
-                  widget.movie.userRating = null;
-                });
+              onPressed: () async {
+                final response = await http.post(Uri.http(
+                    '10.0.2.2:8080', '/api/movies/${movie.movieId}/unrate'));
+                if (response.statusCode == 200) {
+                  setState(() {
+                    movie.userRating = null;
+                  });
+                }
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              onPressed: () {
-                setState(() {
-                  widget.movie.userRating = rating.toInt();
-                });
+              onPressed: () async {
+                final queryParameters = {
+                  'rating': rating.toString(),
+                };
+                final response = await http.post(Uri.http('10.0.2.2:8080',
+                    '/api/movies/${movie.movieId}/rate', queryParameters));
+                if (response.statusCode == 200) {
+                  setState(() {
+                    movie.userRating = rating.toInt();
+                  });
+                }
                 Navigator.of(context).pop();
               },
               child: const Text('Confirm'),
@@ -109,6 +121,26 @@ class _MovieScreenState extends State<MovieScreen> {
     double afterTitleGap = deviceHeight * 0.015;
     double afterOtherGap = deviceHeight * 0.01;
 
+    onWatchlistButtonPressed() async {
+      if (!movie.isOnWatchlist) {
+        final response = await http.post(Uri.http(
+            '10.0.2.2:8080', '/api/movies/${movie.movieId}/add_to_watchlist'));
+        if (response.statusCode == 200) {
+          setState(() {
+            movie.isOnWatchlist = !movie.isOnWatchlist;
+          });
+        }
+      } else {
+        final response = await http.post(Uri.http('10.0.2.2:8080',
+            '/api/movies/${movie.movieId}/remove_from_watchlist'));
+        if (response.statusCode == 200) {
+          setState(() {
+            movie.isOnWatchlist = !movie.isOnWatchlist;
+          });
+        }
+      }
+    }
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -117,7 +149,7 @@ class _MovieScreenState extends State<MovieScreen> {
       body: Stack(
         children: [
           Image.network(
-            widget.movie.imageUrl,
+            movie.imageUrl,
             fit: BoxFit.cover,
             height: double.infinity,
           ),
@@ -142,7 +174,7 @@ class _MovieScreenState extends State<MovieScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.movie.title,
+                            movie.title,
                             textScaleFactor: titleScaleFactor,
                             style: const TextStyle(color: Colors.white),
                           ),
@@ -151,7 +183,7 @@ class _MovieScreenState extends State<MovieScreen> {
                           ),
                           Text(
                             textAlign: TextAlign.justify,
-                            widget.movie.description,
+                            movie.description,
                             textScaleFactor: descriptionScaleFactor,
                             style: const TextStyle(color: Colors.white),
                           ),
@@ -159,22 +191,22 @@ class _MovieScreenState extends State<MovieScreen> {
                             height: afterOtherGap,
                           ),
                           Text(
-                            "rating: ${widget.movie.rating}",
+                            "rating: ${movie.rating}",
                             textScaleFactor: otherScaleFactor,
                             style: const TextStyle(color: Colors.white),
                           ),
                           Text(
-                            "year: ${widget.movie.year}",
+                            "year: ${movie.year}",
                             textScaleFactor: otherScaleFactor,
                             style: const TextStyle(color: Colors.white),
                           ),
                           Text(
-                            "length: ${widget.movie.length}",
+                            "length: ${movie.length}",
                             textScaleFactor: otherScaleFactor,
                             style: const TextStyle(color: Colors.white),
                           ),
                           Text(
-                            "genres: ${widget.movie.genres}",
+                            "genres: ${movie.genres}",
                             textScaleFactor: otherScaleFactor,
                             style: const TextStyle(color: Colors.white),
                           ),
@@ -192,7 +224,7 @@ class _MovieScreenState extends State<MovieScreen> {
                                 },
                                 icon: Icon(
                                   Icons.watch_later,
-                                  color: widget.movie.isOnWatchlist
+                                  color: movie.isOnWatchlist
                                       ? Colors.white
                                       : Colors.grey,
                                   size: 64,
@@ -203,7 +235,7 @@ class _MovieScreenState extends State<MovieScreen> {
                                 onPressed: onRateButtonPressed,
                                 icon: Icon(
                                   Icons.star,
-                                  color: widget.movie.isRated
+                                  color: movie.isRated
                                       ? Colors.white
                                       : Colors.grey,
                                   size: 64,

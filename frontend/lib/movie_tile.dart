@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/movie_screen.dart';
 
 class Movie {
+  int movieId;
   String title;
   String description;
   String genres;
@@ -16,6 +17,7 @@ class Movie {
   int? userRating;
 
   Movie(
+    this.movieId,
     this.title,
     this.description,
     this.genres,
@@ -27,6 +29,24 @@ class Movie {
     this.isRated,
     this.userRating,
   );
+
+  static Movie fromDICT(dict) {
+    return Movie(
+      dict["movieId"],
+      dict["title"],
+      dict["description"],
+      (dict["genres"] as List).join(", "),
+      dict["rating"]?.toString() ?? "6.9",
+      dict["year"].toString(),
+      dict["length"],
+      dict["imageUrl"] != "jak wyzej"
+          ? dict["imageUrl"]
+          : 'https://live.staticflickr.com/65535/50494067068_98b220b337_b.jpg',
+      dict["isOnWatchlist"],
+      dict["isRated"],
+      dict["userRating"],
+    );
+  }
 }
 
 const double imageAspectRatio = 12 / 16;

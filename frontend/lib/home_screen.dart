@@ -14,7 +14,7 @@ class HomeScreen extends StatefulWidget {
 
 const double borderRadiusProportion = 0.1;
 
-Future<List<String>> fetchMovies(int offset, int limit) async {
+Future<List<Movie>> fetchMovies(int offset, int limit) async {
   final queryParameters = {
     'offset': offset.toString(),
     'limit': limit.toString(),
@@ -22,12 +22,30 @@ Future<List<String>> fetchMovies(int offset, int limit) async {
   final response =
       await http.get(Uri.http('10.0.2.2:8080', '/api/movies', queryParameters));
   final json = jsonDecode(response.body);
-  final parsed = (json as List).map((m) => m["title"] as String).toList();
-  return parsed;
+  final movieCount = (json["count"] as int);
+  final movieList =
+      (json["movies"] as List).map((m) => Movie.fromDICT(m)).toList();
+  return movieList;
+}
+
+Future<List<Movie>> fetchRecommendedMovies(int offset, int limit) async {
+  final queryParameters = {
+    'offset': offset.toString(),
+    'limit': limit.toString(),
+  };
+  final response = await http.get(
+      Uri.http('10.0.2.2:8080', '/api/movies/recommended', queryParameters));
+  final json = jsonDecode(response.body);
+  final movieCount = (json["count"] as int);
+  final movieList =
+      (json["movies"] as List).map((m) => Movie.fromDICT(m)).toList();
+  return movieList;
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<Movie> movies = moviesPredefined;
+  List<Movie> movies = [];
+  List<Movie> recommendedMovies = [];
+  List<Movie> displayedMovies = [];
   bool isSearchbarFilled = false;
 
   bool isLastPage = false;
@@ -38,28 +56,48 @@ class _HomeScreenState extends State<HomeScreen> {
   final int nextPageTrigger = 2;
   ScrollController scrollController = ScrollController();
 
-  Future<void> fetchData() async {
-    try {
-      final additionalMovieTitles =
-          await fetchMovies(offset, numberOfMoviesPerRequest);
+  Future<void> updateRecommendedMovies() async {
+    // try {
+    final additionalMovies =
+        await fetchRecommendedMovies(offset, numberOfMoviesPerRequest);
 
-      setState(() {
-        loading = false;
-        offset = offset + numberOfMoviesPerRequest;
-        movieTitles.addAll(additionalMovieTitles);
-      });
-    } catch (e) {
-      print("error --> $e");
-    }
+    setState(() {
+      loading = false;
+      offset = offset + numberOfMoviesPerRequest;
+      recommendedMovies.addAll(additionalMovies);
+    });
+    // } catch (e) {
+    //   print("error --> $e");
+    // }
+  }
+
+  Future<void> updateMovies() async {
+    // try {
+    final additionalMovies =
+        await fetchMovies(offset, numberOfMoviesPerRequest);
+
+    setState(() {
+      loading = false;
+      offset = offset + numberOfMoviesPerRequest;
+      movies.addAll(additionalMovies);
+    });
+    // } catch (e) {
+    //   print("error --> $e");
+    // }
   }
 
   void searchFunction(String searchStr) {
     setState(() {
       final String lowerSearchStr = searchStr.toLowerCase();
-      movies = moviesPredefined
-          .where((movie) => movie.title.toLowerCase().contains(lowerSearchStr))
-          .toList();
       isSearchbarFilled = lowerSearchStr.isNotEmpty;
+      if (isSearchbarFilled) {
+        displayedMovies = movies
+            .where(
+                (movie) => movie.title.toLowerCase().contains(lowerSearchStr))
+            .toList();
+      } else {
+        displayedMovies = recommendedMovies;
+      }
     });
   }
 
@@ -71,13 +109,18 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!loading && scrollController.position.pixels > nextPageTrigger) {
         setState(() {
           loading = true;
-          fetchData();
+          if (isSearchbarFilled) {
+            updateMovies();
+          } else {
+            updateRecommendedMovies();
+          }
           print('henloo');
         });
       }
     });
     super.initState();
-    fetchData();
+    updateRecommendedMovies();
+    updateMovies();
   }
 
   @override
@@ -124,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ListView.builder(
               shrinkWrap: true,
               physics: const ClampingScrollPhysics(),
-              itemCount: movieTitles.length + 1,
+              itemCount: displayedMovies.length + 1,
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return Container(
@@ -138,14 +181,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   );
                 } else {
-                  // final movie = movies[index - 1];
-                  // return MovieTile(movie: movie);
+                  final movie = displayedMovies[index - 1];
+                  return MovieTile(movie: movie);
 
                   // final movieTitle = movies[index - 1].title;
                   // return MovieTileStub(title: movieTitle);
 
-                  final movieTitle = movieTitles[index - 1];
-                  return MovieTileStub(title: movieTitle);
+                  // final movieTitle = movieTitles[index - 1];
+                  // return MovieTileStub(title: movieTitle);
                 }
               },
             ),
