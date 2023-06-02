@@ -15,95 +15,7 @@ class MovieScreen extends StatefulWidget {
 
 class _MovieScreenState extends State<MovieScreen> {
   late Movie movie = widget.movie;
-
-  Future<void> onRateButtonPressed() async {
-    double rating = movie.userRating?.toDouble() ?? 0.0;
-
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.teal[800],
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text(
-            'Rate this movie',
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          ),
-          content: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-              return RatingBar.builder(
-                glow: false,
-                initialRating: rating,
-                minRating: 1,
-                direction: Axis.horizontal,
-                allowHalfRating: true,
-                unratedColor: Colors.amber.withAlpha(75),
-                itemCount: 10,
-                itemSize: 25,
-                itemPadding: const EdgeInsets.symmetric(horizontal: 1.0),
-                itemBuilder: (context, _) => const Icon(
-                  Icons.star,
-                  color: Colors.amber,
-                ),
-                onRatingUpdate: (newRating) {
-                  setState(() {
-                    rating = newRating;
-                  });
-                },
-                updateOnDrag: true,
-              );
-            },
-          ),
-          actionsAlignment: MainAxisAlignment.spaceEvenly,
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text(
-                'Remove rating',
-                style: TextStyle(
-                  color: Colors.red[300],
-                ),
-              ),
-              onPressed: () async {
-                final response = await http.post(Uri.http(
-                    '10.0.2.2:8080', '/api/movies/${movie.movieId}/unrate'));
-                if (response.statusCode == 200) {
-                  setState(() {
-                    movie.userRating = null;
-                  });
-                }
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              onPressed: () async {
-                final queryParameters = {
-                  'rating': rating.toString(),
-                };
-                final response = await http.post(Uri.http('10.0.2.2:8080',
-                    '/api/movies/${movie.movieId}/rate', queryParameters));
-                if (response.statusCode == 200) {
-                  setState(() {
-                    movie.userRating = rating.toInt();
-                  });
-                }
-                Navigator.of(context).pop();
-              },
-              child: const Text('Confirm'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  late double rating = movie.userRating?.toDouble() ?? 0.0;
 
   @override
   Widget build(BuildContext context) {
@@ -120,6 +32,99 @@ class _MovieScreenState extends State<MovieScreen> {
     double otherScaleFactor = 1.2;
     double afterTitleGap = deviceHeight * 0.015;
     double afterOtherGap = deviceHeight * 0.01;
+
+    double starSize = deviceWidth * 0.062;
+
+    Widget ratePopup = AlertDialog(
+      backgroundColor: Colors.teal[800],
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(borderRadius)),
+      title: const Text(
+        'Rate this movie',
+        style: TextStyle(
+          color: Colors.white,
+        ),
+      ),
+      content: StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return RatingBar.builder(
+            glow: false,
+            initialRating: rating,
+            minRating: 1,
+            direction: Axis.horizontal,
+            allowHalfRating: false,
+            unratedColor: Colors.amber.withAlpha(75),
+            itemCount: 10,
+            itemSize: starSize,
+            itemPadding: EdgeInsets.symmetric(horizontal: starSize / 20),
+            itemBuilder: (context, _) => const Icon(
+              Icons.star,
+              color: Colors.amber,
+            ),
+            onRatingUpdate: (newRating) {
+              setState(() {
+                rating = newRating;
+              });
+            },
+            updateOnDrag: true,
+          );
+        },
+      ),
+      actionsAlignment: MainAxisAlignment.spaceEvenly,
+      actions: <Widget>[
+        TextButton(
+          child: const Text('Cancel'),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        TextButton(
+          child: Text(
+            'Remove rating',
+            style: TextStyle(
+              color: Colors.red[300],
+            ),
+          ),
+          onPressed: () async {
+            final response = await http.post(Uri.http(
+                '10.0.2.2:8080', '/api/movies/${movie.movieId}/unrate'));
+            if (response.statusCode == 200) {
+              setState(() {
+                movie.userRating = null;
+              });
+            }
+            Navigator.of(context).pop();
+          },
+        ),
+        TextButton(
+          onPressed: () async {
+            final queryParameters = {
+              'rating': rating.toString(),
+            };
+            final response = await http.post(Uri.http('10.0.2.2:8080',
+                '/api/movies/${movie.movieId}/rate', queryParameters));
+            if (response.statusCode == 200) {
+              setState(() {
+                movie.userRating = rating.toInt();
+              });
+            }
+            Navigator.of(context).pop();
+          },
+          child: const Text('Confirm'),
+        ),
+      ],
+    );
+
+    Future<void> onRateButtonPressed() async {
+      rating = movie.userRating?.toDouble() ?? 0.0;
+
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return ratePopup;
+        },
+      );
+    }
 
     onWatchlistButtonPressed() async {
       if (!movie.isOnWatchlist) {
