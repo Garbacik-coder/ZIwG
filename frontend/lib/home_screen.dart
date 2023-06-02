@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -14,10 +15,11 @@ class HomeScreen extends StatefulWidget {
 
 const double borderRadiusProportion = 0.1;
 
-Future<List<Movie>> fetchMovies(int offset, int limit) async {
+Future<List<Movie>> fetchMovies(int offset, int limit, String str) async {
   final queryParameters = {
     'offset': offset.toString(),
     'limit': limit.toString(),
+    'searchString': str,
   };
   final response =
       await http.get(Uri.http('10.0.2.2:8080', '/api/movies', queryParameters));
@@ -47,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Movie> recommendedMovies = [];
   List<Movie> displayedMovies = [];
   bool isSearchbarFilled = false;
+  String searchString = "";
 
   bool isLastPage = false;
   int offset = 0;
@@ -55,6 +58,8 @@ class _HomeScreenState extends State<HomeScreen> {
   List<String> movieTitles = [];
   final int nextPageTrigger = 2;
   ScrollController scrollController = ScrollController();
+
+  Timer? timer;
 
   Future<void> updateRecommendedMovies() async {
     // try {
@@ -65,6 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
       loading = false;
       offset = offset + numberOfMoviesPerRequest;
       recommendedMovies.addAll(additionalMovies);
+      displayedMovies = recommendedMovies;
     });
     // } catch (e) {
     //   print("error --> $e");
@@ -74,12 +80,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> updateMovies() async {
     // try {
     final additionalMovies =
-        await fetchMovies(offset, numberOfMoviesPerRequest);
+        await fetchMovies(offset, numberOfMoviesPerRequest, searchString);
 
     setState(() {
       loading = false;
       offset = offset + numberOfMoviesPerRequest;
       movies.addAll(additionalMovies);
+      displayedMovies = movies;
     });
     // } catch (e) {
     //   print("error --> $e");
@@ -89,16 +96,31 @@ class _HomeScreenState extends State<HomeScreen> {
   void searchFunction(String searchStr) {
     setState(() {
       final String lowerSearchStr = searchStr.toLowerCase();
+      searchString = lowerSearchStr;
       isSearchbarFilled = lowerSearchStr.isNotEmpty;
-      if (isSearchbarFilled) {
-        displayedMovies = movies
-            .where(
-                (movie) => movie.title.toLowerCase().contains(lowerSearchStr))
-            .toList();
-      } else {
-        displayedMovies = recommendedMovies;
-      }
+      timer?.cancel();
+      timer = Timer(
+        const Duration(seconds: 1),
+        () {
+          setState(() {
+            isSearchbarFilled ? movies = [] : recommendedMovies = [];
+          });
+          isSearchbarFilled ? updateMovies() : updateRecommendedMovies();
+        },
+      );
     });
+    // setState(() {
+    //   final String lowerSearchStr = searchStr.toLowerCase();
+    //   isSearchbarFilled = lowerSearchStr.isNotEmpty;
+    //   if (isSearchbarFilled) {
+    //     displayedMovies = movies
+    //         .where(
+    //             (movie) => movie.title.toLowerCase().contains(lowerSearchStr))
+    //         .toList();
+    //   } else {
+    //     displayedMovies = recommendedMovies;
+    //   }
+    // });
   }
 
   @override
@@ -114,13 +136,11 @@ class _HomeScreenState extends State<HomeScreen> {
           } else {
             updateRecommendedMovies();
           }
-          print('henloo');
         });
       }
     });
     super.initState();
     updateRecommendedMovies();
-    updateMovies();
   }
 
   @override
