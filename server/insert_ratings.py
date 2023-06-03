@@ -13,7 +13,7 @@ driver = GraphDatabase.driver(DATABASE_URL, auth=(DATABASE_USERNAME, DATABASE_PA
 df = pd.read_csv('users.csv')
 
 def insert_rating(tx, user_id, movie_id, rating):
-    return list(tx.run(f'MATCH (user:User) MATCH (movie:Movie) WHERE user.userId = {user_id} AND movie.movieId = {movie_id} CREATE (user)-[rated:RATED {{rating: {rating}}}]->(movie)'))
+    return list(tx.run(f"MATCH (user:User) MATCH (movie:Movie) WHERE user.userId = '{user_id}' AND movie.movieId = {movie_id} CREATE (user)-[rated:RATED {{rating: {rating}}}]->(movie)"))
 
 with driver.session() as db:
     for index, row in df.iterrows():
