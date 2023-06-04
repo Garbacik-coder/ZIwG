@@ -42,6 +42,7 @@ request_started.connect(set_user, app)
 def login_required(f):
     @wraps(f)
     def wrapped(*args, **kwargs):
+        print('dupa')
         auth_header = request.headers.get('Authorization')
         if not auth_header:
             return {'message': 'no authorization provided'}, 401
@@ -106,7 +107,7 @@ def check_offset_and_limit(result, offset, limit):
 def generate_filter_clause(substring, where):
     if substring is None:
         return ""
-    else if where:
+    elif where:
         return f"WHERE movie.title =~ '(?i).*{substring}.*' "
     else:
         return f"AND movie.title =~ '(?i).*{substring}.*' "
@@ -119,7 +120,7 @@ class Movies(Resource):
         substring = request.args.get('substring')
 
         def get_movies(tx, user_id):
-            filterClause = generate_filter_clause(substring, true)
+            filterClause = generate_filter_clause(substring, True)
             return list(tx.run(f"MATCH (movie:Movie) {filterClause}OPTIONAL MATCH (movie)-[:IS_GENRE]->(genre:Genre) OPTIONAL MATCH (:User {{userId: '{user_id}'}})-[rated:RATED]->(movie) OPTIONAL MATCH (:User)-[overallRated:RATED]->(movie) RETURN movie, COLLECT(genre.name) as genres, EXISTS((movie)-[:ON_WATCHLIST]->(:User {{userId: '{user_id}'}})) as on_watchlist, rated, avg(overallRated.rating) as overallRated"))
 
         db = get_db()
@@ -134,9 +135,10 @@ class Recommended(Resource):
     def get(self):
         offset = try_parse_int(request.args.get('offset'), 0)
         limit = try_parse_int(request.args.get('limit'), 0)
+        substring = request.args.get('substring')
 
         def get_recommended(tx, user_id):
-            filterClause = generate_filter_clause(substring, false)
+            filterClause = generate_filter_clause(substring, False)
             return list(tx.run(f"MATCH (movie:Movie)-[is_predicted:IS_PREDICTED]->(user:User) WHERE user.userId = '{user_id}' {filterClause}WITH movie ORDER BY is_predicted.prediction DESC OPTIONAL MATCH (movie)-[:IS_GENRE]->(genre:Genre) OPTIONAL MATCH (:User)-[overallRated:RATED]->(movie) RETURN movie, COLLECT(genre.name) as genres, EXISTS((movie)-[:ON_WATCHLIST]->(:User {{userId: '{user_id}'}})) as on_watchlist, avg(overallRated.rating) as overallRated"))
 
         db = get_db()
@@ -151,9 +153,10 @@ class OnWatchlist(Resource):
     def get(self):
         offset = try_parse_int(request.args.get('offset'), 0)
         limit = try_parse_int(request.args.get('limit'), 0)
+        substring = request.args.get('substring')
 
         def get_on_watchlist(tx, user_id):
-            filterClause = generate_filter_clause(substring, false)
+            filterClause = generate_filter_clause(substring, False)
             return list(tx.run(f"MATCH (movie:Movie)-[on:ON_WATCHLIST]->(user:User) WHERE user.userId = '{user_id}' {filterClause}OPTIONAL MATCH (movie)-[:IS_GENRE]->(genre:Genre) OPTIONAL MATCH (:User {{userId: '{user_id}'}})-[rated:RATED]->(movie) OPTIONAL MATCH (:User)-[overallRated:RATED]->(movie) RETURN movie, COLLECT(genre.name) as genres, rated, avg(overallRated.rating) as overallRated"))
 
         db = get_db()
@@ -168,9 +171,10 @@ class Rated(Resource):
     def get(self):
         offset = try_parse_int(request.args.get('offset'), 0)
         limit = try_parse_int(request.args.get('limit'), 0)
+        substring = request.args.get('substring')
 
         def get_rated(tx, user_id):
-            filterClause = generate_filter_clause(substring, false)
+            filterClause = generate_filter_clause(substring, False)
             return list(tx.run(f"MATCH (user:User)-[rated:RATED]->(movie:Movie) WHERE user.userId = '{user_id}' {filterClause}OPTIONAL MATCH (movie)-[:IS_GENRE]->(genre:Genre) OPTIONAL MATCH (:User)-[overallRated:RATED]->(movie) RETURN movie, COLLECT(genre.name) as genres, EXISTS((movie)-[:ON_WATCHLIST]->(:User {{userId: '{user_id}'}})) as on_watchlist, rated, avg(overallRated.rating) as overallRated"))
 
         db = get_db()
