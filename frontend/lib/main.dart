@@ -158,23 +158,14 @@ class _RootWidgetState extends State<RootWidget> {
             );
           }
 
-          switch (index) {
-            case 0:
-              break;
-            case 1:
-              break;
-            case 2:
-              break;
-            case 3:
-              break;
-          }
-
           if (index < 3) {
             setState(
               () {
                 _selectedIndex = index;
               },
             );
+          } else {
+            FirebaseAuth.instance.signOut();
           }
         },
       ),
