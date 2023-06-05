@@ -1,13 +1,24 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutterfire_ui/auth.dart';
 import 'package:frontend/home_screen.dart';
 import 'package:frontend/movies_predefined.dart';
 import 'package:frontend/watchlist_screen.dart';
 import 'package:frontend/rated_screen.dart';
 import 'movie_tile.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:http/http.dart' as http;
 
 const double titleTextScaleFactor = 4.0;
 
-void main() => runApp(const MovieRecommendationApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(const MovieRecommendationApp());
+}
 
 class MovieRecommendationApp extends StatelessWidget {
   const MovieRecommendationApp({super.key});
@@ -18,8 +29,55 @@ class MovieRecommendationApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: _title,
-      theme: ThemeData(scaffoldBackgroundColor: Colors.teal[800]),
-      home: const RootWidget(),
+      theme: ThemeData(
+        scaffoldBackgroundColor: Colors.teal[800],
+        // textTheme: Theme.of(context).textTheme.apply(
+        //       bodyColor: Colors.white,
+        //       displayColor: Colors.white,
+        //     ),
+        textTheme: const TextTheme(
+          headlineLarge: TextStyle(color: Colors.white),
+          headlineMedium: TextStyle(color: Colors.white),
+          headlineSmall: TextStyle(color: Colors.white),
+          bodyLarge: TextStyle(color: Colors.white),
+          bodyMedium: TextStyle(color: Colors.white),
+          bodySmall: TextStyle(color: Colors.white),
+          displayLarge: TextStyle(color: Colors.white),
+          displayMedium: TextStyle(color: Colors.white),
+          displaySmall: TextStyle(color: Colors.white),
+          labelLarge: TextStyle(color: Colors.white),
+          labelMedium: TextStyle(color: Colors.white),
+          labelSmall: TextStyle(color: Colors.white),
+          titleLarge: TextStyle(color: Colors.white),
+          titleMedium: TextStyle(color: Colors.white),
+          titleSmall: TextStyle(color: Colors.white),
+        ),
+      ),
+      home: const AuthGate(),
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // FirebaseAuth.instance.currentUser?.getIdToken();
+    // FirebaseAuth.instance.currentUser?.uid;
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const SignInScreen(
+            providerConfigs: [
+              EmailProviderConfiguration(),
+            ],
+          );
+        }
+
+        return const RootWidget();
+      },
     );
   }
 }
@@ -123,112 +181,3 @@ class _RootWidgetState extends State<RootWidget> {
     );
   }
 }
-
-// legacy code, may be useful when implementing searchbar logic
-class SearchBarWidget extends StatefulWidget {
-  const SearchBarWidget({super.key});
-
-  @override
-  State<StatefulWidget> createState() => _SearchBarWidgetState();
-}
-
-class _SearchBarWidgetState extends State<SearchBarWidget> {
-  @override
-  Widget build(BuildContext context) {
-    final TextEditingController searchController = TextEditingController();
-    void searchMovies(String searchText) {
-      print("do something");
-    }
-
-    return TextField(
-      controller: searchController,
-      onChanged: searchMovies,
-      decoration: InputDecoration(
-        hintText: "Search Movies",
-        border: InputBorder.none,
-        suffixIcon: IconButton(
-          icon: const Icon(Icons.clear, color: Colors.black),
-          onPressed: () {
-            searchController.clear();
-            searchMovies("");
-          },
-        ),
-      ),
-    );
-  }
-}
-
-  // bool _isStarred = false;
-
-  // Widget _listViewBody() {
-  //   return ListView.separated(
-  //     controller: _homeController,
-  //     itemBuilder: (BuildContext context, int index) {
-  //       return Center(
-  //         child: GestureDetector(
-  //           child: Image.asset('assets/images/65.jpg'),
-  //           onTap: () {
-  //             _showRatingDialog();
-  //           },
-  //         ),
-  //       );
-  //     },
-  //     separatorBuilder: (BuildContext context, int index) => const Divider(
-  //       thickness: 1,
-  //     ),
-  //     itemCount: 5,
-  //   );
-  // }
-
-  // Future<void> _showRatingDialog() async {
-  //   int rating = 0;
-  //   await showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: Text('Rate this image'),
-  //         content: StatefulBuilder(
-  //           builder: (BuildContext context, StateSetter setState) {
-  //             return Row(
-  //               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-  //               children: List.generate(
-  //                 5,
-  //                 (index) {
-  //                   return IconButton(
-  //                     icon: Icon(
-  //                       index < rating ? Icons.star : Icons.star_border,
-  //                       color: index < rating ? Colors.yellow : null,
-  //                     ),
-  //                     onPressed: () {
-  //                       setState(() {
-  //                         rating = index + 1;
-  //                       });
-  //                     },
-  //                   );
-  //                 },
-  //               ),
-  //             );
-  //           },
-  //         ),
-  //         actions: <Widget>[
-  //           TextButton(
-  //             child: Text('CANCEL'),
-  //             onPressed: () {
-  //               Navigator.of(context).pop();
-  //             },
-  //           ),
-  //           TextButton(
-  //             child: Text('OK'),
-  //             onPressed: () {
-  //               setState(() {
-  //                 _isStarred = true;
-  //                 print(rating);
-  //               });
-  //               Navigator.of(context).pop();
-  //             },
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }

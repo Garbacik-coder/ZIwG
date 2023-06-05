@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/movie_tile.dart';
 import 'package:frontend/movies_predefined.dart';
@@ -15,14 +17,29 @@ class HomeScreen extends StatefulWidget {
 
 const double borderRadiusProportion = 0.1;
 
+Future<void> signIn() async {
+  final queryParameters = {
+    'userId': FirebaseAuth.instance.currentUser?.uid,
+    'idToken': await FirebaseAuth.instance.currentUser?.getIdToken(),
+  };
+  await http
+      .post(Uri.http('10.0.2.2:8080', '/api/users/sign_in', queryParameters));
+}
+
 Future<List<Movie>> fetchMovies(int offset, int limit, String str) async {
   final queryParameters = {
     'offset': offset.toString(),
     'limit': limit.toString(),
-    'searchString': str,
+    'substring': str,
   };
-  final response =
-      await http.get(Uri.http('10.0.2.2:8080', '/api/movies', queryParameters));
+  // do headera: Authorization Bearer <token>
+  final response = await http.get(
+    Uri.http('10.0.2.2:8080', '/api/movies', queryParameters),
+    headers: {
+      HttpHeaders.authorizationHeader:
+          'Bearer ${await FirebaseAuth.instance.currentUser?.getIdToken()}'
+    },
+  );
   final json = jsonDecode(response.body);
   final movieCount = (json["count"] as int);
   final movieList =
@@ -35,8 +52,17 @@ Future<List<Movie>> fetchRecommendedMovies(int offset, int limit) async {
     'offset': offset.toString(),
     'limit': limit.toString(),
   };
+
+  String? token = await FirebaseAuth.instance.currentUser?.getIdToken();
+
   final response = await http.get(
-      Uri.http('10.0.2.2:8080', '/api/movies/recommended', queryParameters));
+    Uri.http(
+      '10.0.2.2:8080',
+      '/api/movies/recommended',
+      queryParameters,
+    ),
+    headers: {"Authorization": 'Bearer $token'},
+  );
   final json = jsonDecode(response.body);
   final movieCount = (json["count"] as int);
   final movieList =
@@ -45,6 +71,7 @@ Future<List<Movie>> fetchRecommendedMovies(int offset, int limit) async {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  bool signedIn = false;
   List<Movie> movies = [];
   List<Movie> recommendedMovies = [];
   List<Movie> displayedMovies = [];
@@ -52,7 +79,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String searchString = "";
 
   bool isLastPage = false;
-  int offset = 0;
+  int allOffset = 0;
+  int recommendedOffset = 0;
   bool loading = true;
   final int numberOfMoviesPerRequest = 3;
   List<String> movieTitles = [];
@@ -62,13 +90,19 @@ class _HomeScreenState extends State<HomeScreen> {
   Timer? timer;
 
   Future<void> updateRecommendedMovies() async {
+    if (!signedIn) {
+      await signIn();
+      setState(() {
+        signedIn = true;
+      });
+    }
     // try {
-    final additionalMovies =
-        await fetchRecommendedMovies(offset, numberOfMoviesPerRequest);
+    final additionalMovies = await fetchRecommendedMovies(
+        recommendedOffset, numberOfMoviesPerRequest);
 
     setState(() {
       loading = false;
-      offset = offset + numberOfMoviesPerRequest;
+      recommendedOffset = recommendedOffset + numberOfMoviesPerRequest;
       recommendedMovies.addAll(additionalMovies);
       displayedMovies = recommendedMovies;
     });
@@ -80,11 +114,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> updateMovies() async {
     // try {
     final additionalMovies =
-        await fetchMovies(offset, numberOfMoviesPerRequest, searchString);
+        await fetchMovies(allOffset, numberOfMoviesPerRequest, searchString);
 
     setState(() {
       loading = false;
-      offset = offset + numberOfMoviesPerRequest;
+      allOffset = allOffset + numberOfMoviesPerRequest;
       movies.addAll(additionalMovies);
       displayedMovies = movies;
     });
@@ -103,9 +137,16 @@ class _HomeScreenState extends State<HomeScreen> {
         const Duration(seconds: 1),
         () {
           setState(() {
-            isSearchbarFilled ? movies = [] : recommendedMovies = [];
+            if (isSearchbarFilled) {
+              movies = [];
+              allOffset = 0;
+              updateMovies();
+            } else {
+              recommendedMovies = [];
+              recommendedOffset = 0;
+              updateRecommendedMovies();
+            }
           });
-          isSearchbarFilled ? updateMovies() : updateRecommendedMovies();
         },
       );
     });

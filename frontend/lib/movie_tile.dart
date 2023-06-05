@@ -44,7 +44,9 @@ class Movie {
           : 'https://live.staticflickr.com/65535/50494067068_98b220b337_b.jpg',
       dict["isOnWatchlist"],
       dict["isRated"],
-      dict["userRating"],
+      (dict["userRating"] is double)
+          ? (dict["userRating"] as double).toInt()
+          : dict["userRating"],
     );
   }
 }

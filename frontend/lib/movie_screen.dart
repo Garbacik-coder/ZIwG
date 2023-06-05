@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:frontend/movie_tile.dart';
 import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MovieScreen extends StatefulWidget {
   Movie movie;
@@ -86,11 +88,17 @@ class _MovieScreenState extends State<MovieScreen> {
             ),
           ),
           onPressed: () async {
-            final response = await http.post(Uri.http(
-                '10.0.2.2:8080', '/api/movies/${movie.movieId}/unrate'));
+            final response = await http.post(
+              Uri.http('10.0.2.2:8080', '/api/movies/${movie.movieId}/unrate'),
+              headers: {
+                HttpHeaders.authorizationHeader:
+                    'Bearer ${await FirebaseAuth.instance.currentUser?.getIdToken()}'
+              },
+            );
             if (response.statusCode == 200) {
               setState(() {
                 movie.userRating = null;
+                movie.isRated = false;
               });
             }
             Navigator.of(context).pop();
@@ -101,11 +109,18 @@ class _MovieScreenState extends State<MovieScreen> {
             final queryParameters = {
               'rating': rating.toString(),
             };
-            final response = await http.post(Uri.http('10.0.2.2:8080',
-                '/api/movies/${movie.movieId}/rate', queryParameters));
+            final response = await http.post(
+              Uri.http('10.0.2.2:8080', '/api/movies/${movie.movieId}/rate',
+                  queryParameters),
+              headers: {
+                HttpHeaders.authorizationHeader:
+                    'Bearer ${await FirebaseAuth.instance.currentUser?.getIdToken()}'
+              },
+            );
             if (response.statusCode == 200) {
               setState(() {
                 movie.userRating = rating.toInt();
+                movie.isRated = true;
               });
             }
             Navigator.of(context).pop();
@@ -128,16 +143,28 @@ class _MovieScreenState extends State<MovieScreen> {
 
     onWatchlistButtonPressed() async {
       if (!movie.isOnWatchlist) {
-        final response = await http.post(Uri.http(
-            '10.0.2.2:8080', '/api/movies/${movie.movieId}/add_to_watchlist'));
+        final response = await http.post(
+          Uri.http(
+              '10.0.2.2:8080', '/api/movies/${movie.movieId}/add_to_watchlist'),
+          headers: {
+            HttpHeaders.authorizationHeader:
+                'Bearer ${await FirebaseAuth.instance.currentUser?.getIdToken()}'
+          },
+        );
         if (response.statusCode == 200) {
           setState(() {
             movie.isOnWatchlist = !movie.isOnWatchlist;
           });
         }
       } else {
-        final response = await http.post(Uri.http('10.0.2.2:8080',
-            '/api/movies/${movie.movieId}/remove_from_watchlist'));
+        final response = await http.post(
+          Uri.http('10.0.2.2:8080',
+              '/api/movies/${movie.movieId}/remove_from_watchlist'),
+          headers: {
+            HttpHeaders.authorizationHeader:
+                'Bearer ${await FirebaseAuth.instance.currentUser?.getIdToken()}'
+          },
+        );
         if (response.statusCode == 200) {
           setState(() {
             movie.isOnWatchlist = !movie.isOnWatchlist;

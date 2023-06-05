@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "92073823",
+    "project_id": "movie-recommendation-flutter",
+    "storage_bucket": "movie-recommendation-flutter.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:92073823:android:1d768f15cdb90d081b90ea",
+        "android_client_info": {
+          "package_name": "com.example.frontend"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "92073823-5610juvirre59b0uhmdm4cthp434t5r3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtRsBqNBpweNcbvoIng3HoBk_zRZf5VkM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "92073823-5610juvirre59b0uhmdm4cthp434t5r3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
