@@ -42,7 +42,6 @@ request_started.connect(set_user, app)
 def login_required(f):
     @wraps(f)
     def wrapped(*args, **kwargs):
-        print('dupa')
         auth_header = request.headers.get('Authorization')
         if not auth_header:
             return {'message': 'no authorization provided'}, 401
@@ -139,7 +138,7 @@ class Recommended(Resource):
 
         def get_recommended(tx, user_id):
             filterClause = generate_filter_clause(substring, False)
-            return list(tx.run(f"MATCH (movie:Movie)-[is_predicted:IS_PREDICTED]->(user:User) WHERE user.userId = '{user_id}' {filterClause}WITH movie ORDER BY is_predicted.prediction DESC OPTIONAL MATCH (movie)-[:IS_GENRE]->(genre:Genre) OPTIONAL MATCH (:User)-[overallRated:RATED]->(movie) RETURN movie, COLLECT(genre.name) as genres, EXISTS((movie)-[:ON_WATCHLIST]->(:User {{userId: '{user_id}'}})) as on_watchlist, avg(overallRated.rating) as overallRated"))
+            return list(tx.run(f"MATCH (movie:Movie)-[is_predicted:IS_PREDICTED]->(user:User) WHERE user.userId = '{user_id}' AND (is_predicted.rejected IS NULL OR is_predicted.rejected <> True) {filterClause}WITH movie ORDER BY is_predicted.prediction DESC OPTIONAL MATCH (movie)-[:IS_GENRE]->(genre:Genre) OPTIONAL MATCH (:User)-[overallRated:RATED]->(movie) RETURN movie, COLLECT(genre.name) as genres, EXISTS((movie)-[:ON_WATCHLIST]->(:User {{userId: '{user_id}'}})) as on_watchlist, avg(overallRated.rating) as overallRated"))
 
         db = get_db()
         result = db.execute_write(get_recommended, g.user['userId'])
@@ -226,6 +225,16 @@ class Unrate(Resource):
         result = db.execute_write(unrate_movie, g.user['userId'], movieId)
         return {}
 
+class Reject(Resource):
+    @login_required
+    def post(self, movieId):
+        def reject_movie(tx, user_id, movie_id):
+            return tx.run(f"MATCH (movie:Movie)-[is_predicted:IS_PREDICTED]->(user:User) WHERE user.userId = '{user_id}' AND movie.movieId = {movie_id} SET is_predicted.rejected = True")
+
+        db = get_db()
+        result = db.execute_write(reject_movie, g.user['userId'], movieId)
+        return {}
+
 class SignIn(Resource):
     def post(self):
         userId = request.args.get('userId')
@@ -255,6 +264,7 @@ api.add_resource(AddToWatchlist, '/api/movies/<int:movieId>/add_to_watchlist')
 api.add_resource(RemoveFromWatchlist, '/api/movies/<int:movieId>/remove_from_watchlist')
 api.add_resource(Rate, '/api/movies/<int:movieId>/rate')
 api.add_resource(Unrate, '/api/movies/<int:movieId>/unrate')
+api.add_resource(Reject, '/api/movies/<int:movieId>/reject')
 api.add_resource(SignIn, '/api/users/sign_in')
 
 app.run(host=SERVER_HOST, port=SERVER_PORT)
