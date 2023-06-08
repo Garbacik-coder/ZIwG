@@ -65,12 +65,12 @@ def serialize_movie(movie, genres, on_watchlist, rated, overallRating):
     return {
         'movieId': movie['movieId'],
         'title': movie['title'],
-        'description': 'z IMDb trzeba to wziac',
+        'description': movie['description'],
         'genres': genres,
         'rating': overallRating,
         'year': movie['year'],
-        'length': 'z IMDb',
-        'imageUrl': 'jak wyzej',
+        'length': movie['length'],
+        'imageUrl': movie['imageUrl'],
         'isOnWatchlist': on_watchlist,
         'isRated': rating is not None,
         'userRating': rating
@@ -235,6 +235,16 @@ class Reject(Resource):
         result = db.execute_write(reject_movie, g.user['userId'], movieId)
         return {}
 
+class Unreject(Resource):
+    @login_required
+    def post(self, movieId):
+        def unreject_movie(tx, user_id, movie_id):
+            return tx.run(f"MATCH (movie:Movie)-[is_predicted:IS_PREDICTED]->(user:User) WHERE user.userId = '{user_id}' AND movie.movieId = {movie_id} SET is_predicted.rejected = False")
+
+        db = get_db()
+        result = db.execute_write(unreject_movie, g.user['userId'], movieId)
+        return {}
+
 class SignIn(Resource):
     def post(self):
         userId = request.args.get('userId')
@@ -265,6 +275,7 @@ api.add_resource(RemoveFromWatchlist, '/api/movies/<int:movieId>/remove_from_wat
 api.add_resource(Rate, '/api/movies/<int:movieId>/rate')
 api.add_resource(Unrate, '/api/movies/<int:movieId>/unrate')
 api.add_resource(Reject, '/api/movies/<int:movieId>/reject')
+api.add_resource(Unreject, '/api/movies/<int:movieId>/unreject')
 api.add_resource(SignIn, '/api/users/sign_in')
 
 app.run(host=SERVER_HOST, port=SERVER_PORT)
