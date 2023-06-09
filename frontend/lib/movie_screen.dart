@@ -18,6 +18,7 @@ class MovieScreen extends StatefulWidget {
 class _MovieScreenState extends State<MovieScreen> {
   late Movie movie = widget.movie;
   late double rating = movie.userRating?.toDouble() ?? 0.0;
+  bool isHidden = false;
 
   @override
   Widget build(BuildContext context) {
@@ -141,6 +142,42 @@ class _MovieScreenState extends State<MovieScreen> {
       );
     }
 
+    Future<void> onHideButtonPressed() async {
+      if (!isHidden) {
+        final response = await http.post(
+          Uri.http(
+            '10.0.2.2:8080',
+            '/api/movies/${movie.movieId}/reject',
+          ),
+          headers: {
+            HttpHeaders.authorizationHeader:
+                'Bearer ${await FirebaseAuth.instance.currentUser?.getIdToken()}'
+          },
+        );
+        if (response.statusCode == 200) {
+          setState(() {
+            isHidden = true;
+          });
+        }
+      } else {
+        final response = await http.post(
+          Uri.http(
+            '10.0.2.2:8080',
+            '/api/movies/${movie.movieId}/unreject',
+          ),
+          headers: {
+            HttpHeaders.authorizationHeader:
+                'Bearer ${await FirebaseAuth.instance.currentUser?.getIdToken()}'
+          },
+        );
+        if (response.statusCode == 200) {
+          setState(() {
+            isHidden = false;
+          });
+        }
+      }
+    }
+
     onWatchlistButtonPressed() async {
       if (!movie.isOnWatchlist) {
         final response = await http.post(
@@ -249,6 +286,15 @@ class _MovieScreenState extends State<MovieScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
+                              IconButton(
+                                padding: const EdgeInsets.all(0),
+                                onPressed: onHideButtonPressed,
+                                icon: Icon(
+                                  Icons.visibility_off,
+                                  color: isHidden ? Colors.white : Colors.grey,
+                                  size: 64,
+                                ),
+                              ),
                               IconButton(
                                 padding: const EdgeInsets.all(0),
                                 onPressed: () {

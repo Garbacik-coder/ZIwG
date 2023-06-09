@@ -32,7 +32,6 @@ Future<List<Movie>> fetchMovies(int offset, int limit, String str) async {
     'limit': limit.toString(),
     'substring': str,
   };
-  // do headera: Authorization Bearer <token>
   final response = await http.get(
     Uri.http('10.0.2.2:8080', '/api/movies', queryParameters),
     headers: {
