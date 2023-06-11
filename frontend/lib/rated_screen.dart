@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:frontend/movie_tile.dart';
@@ -143,7 +144,7 @@ class _RatedScreenState extends State<RatedScreen> {
             child: ListView.builder(
               shrinkWrap: true,
               physics: const ClampingScrollPhysics(),
-              itemCount: ratedMovies.length + 1,
+              itemCount: max(ratedMovies.length + 1, 2),
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return Container(
@@ -157,8 +158,27 @@ class _RatedScreenState extends State<RatedScreen> {
                     ),
                   );
                 } else {
-                  final movie = ratedMovies[index - 1];
-                  return MovieTile(movie: movie);
+                  if (loading) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                        ),
+                      ),
+                    );
+                  } else {
+                    return Container(
+                      padding: const EdgeInsets.all(20),
+                      child: const Text(
+                        "No rated movies",
+                        textScaleFactor: infoScaleFactor,
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
+                      ),
+                    );
+                  }
                 }
               },
             ),

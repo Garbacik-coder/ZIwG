@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -227,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ListView.builder(
               shrinkWrap: true,
               physics: const ClampingScrollPhysics(),
-              itemCount: displayedMovies.length + 1,
+              itemCount: max(displayedMovies.length + 1, 2),
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return Container(
@@ -241,14 +242,32 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   );
                 } else {
-                  final movie = displayedMovies[index - 1];
-                  return MovieTile(movie: movie);
-
-                  // final movieTitle = movies[index - 1].title;
-                  // return MovieTileStub(title: movieTitle);
-
-                  // final movieTitle = movieTitles[index - 1];
-                  // return MovieTileStub(title: movieTitle);
+                  if (displayedMovies.isNotEmpty) {
+                    final movie = displayedMovies[index - 1];
+                    return MovieTile(movie: movie);
+                  } else {
+                    if (loading) {
+                      return const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+                    } else {
+                      return Container(
+                        padding: const EdgeInsets.all(20),
+                        child: const Text(
+                          "Rate at least 3 movies and wait for update.",
+                          textScaleFactor: infoScaleFactor,
+                          style: TextStyle(
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+                    }
+                  }
                 }
               },
             ),

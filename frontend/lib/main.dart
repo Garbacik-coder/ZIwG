@@ -149,15 +149,6 @@ class _RootWidgetState extends State<RootWidget> {
         ],
         currentIndex: _selectedIndex,
         onTap: (int index) {
-          // only scroll to top when current index is selected.
-          if (_selectedIndex == index) {
-            _homeController.animateTo(
-              0.0,
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.easeOut,
-            );
-          }
-
           if (index < 3) {
             setState(
               () {

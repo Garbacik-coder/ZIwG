@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:frontend/movie_tile.dart';
@@ -146,7 +147,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
             child: ListView.builder(
               shrinkWrap: true,
               physics: const ClampingScrollPhysics(),
-              itemCount: watchlistMovies.length + 1,
+              itemCount: max(watchlistMovies.length + 1, 2),
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return Container(
@@ -160,8 +161,32 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                     ),
                   );
                 } else {
-                  final movie = watchlistMovies[index - 1];
-                  return MovieTile(movie: movie);
+                  if (watchlistMovies.isNotEmpty) {
+                    final movie = watchlistMovies[index - 1];
+                    return MovieTile(movie: movie);
+                  } else {
+                    if (loading) {
+                      return const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+                    } else {
+                      return Container(
+                        padding: const EdgeInsets.all(20),
+                        child: const Text(
+                          "No movies on watchlist",
+                          textScaleFactor: infoScaleFactor,
+                          style: TextStyle(
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+                    }
+                  }
                 }
               },
             ),
