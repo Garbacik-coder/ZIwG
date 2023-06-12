@@ -31,7 +31,9 @@ dtf_users = dtf_users.rename(columns={'rating':'y'})
 dtf_products = dtf_products[['product', 'name', 'year', 'old', 'genres']].set_index('product')
 dtf_users = dtf_users[['user', 'product', 'daytime', 'weekend', 'y']]
 
-
+dtf_context = dtf_users[['user','product','daytime','weekend']]
+dtf_context.set_index('user', inplace=True)
+dtf_context.to_csv('context.csv')
 
 tags = [i.split('|') for i in dtf_products['genres'].unique()]
 columns = list(set([i for lst in tags for i in lst]))
@@ -52,5 +54,5 @@ dtf_users = dtf_users[sorted(dtf_users.columns)]
 
 dtf_users = pd.DataFrame(preprocessing.MinMaxScaler(feature_range=(0.5,1)).fit_transform(dtf_users.values), columns=dtf_users.columns, index=dtf_users.index)
 
-#dtf_users.to_csv('users.csv')
-dtf_products.to_csv('products.csv')
+#dtf_users.to_csv('users2.csv')
+#dtf_products.to_csv('products.csv')

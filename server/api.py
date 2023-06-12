@@ -4,6 +4,7 @@ from neo4j import GraphDatabase
 import pandas as pd
 from functools import wraps
 import re
+from predict_user import predict
 
 DATABASE_USERNAME = 'neo4j'
 DATABASE_PASSWORD = '12345678'
@@ -132,6 +133,16 @@ class Movies(Resource):
 class Recommended(Resource):
     @login_required
     def get(self):
+        def recommended_exists(tx, user_id):
+            return tx.run(f"MATCH (user:User) WHERE user.userId = '{user_id}' RETURN EXISTS ((:Movie)-[:IS_PREDICTED]->(user)) AS exists, user").single()
+        
+        db = get_db()
+        
+        exists = db.execute_read(recommended_exists, g.user['userId'])
+        if not exists['exists']:
+            print(exists['user']['id'])
+            predict(db, exists['user']['id'])
+
         offset = try_parse_int(request.args.get('offset'), 0)
         limit = try_parse_int(request.args.get('limit'), 0)
         substring = request.args.get('substring')
@@ -140,7 +151,6 @@ class Recommended(Resource):
             filterClause = generate_filter_clause(substring, False)
             return list(tx.run(f"MATCH (movie:Movie)-[is_predicted:IS_PREDICTED]->(user:User) WHERE user.userId = '{user_id}' AND (is_predicted.rejected IS NULL OR is_predicted.rejected <> True) {filterClause}WITH movie ORDER BY is_predicted.prediction DESC OPTIONAL MATCH (movie)-[:IS_GENRE]->(genre:Genre) OPTIONAL MATCH (:User)-[overallRated:RATED]->(movie) RETURN movie, COLLECT(genre.name) as genres, EXISTS((movie)-[:ON_WATCHLIST]->(:User {{userId: '{user_id}'}})) as on_watchlist, avg(overallRated.rating) as overallRated"))
 
-        db = get_db()
         result = db.execute_write(get_recommended, g.user['userId'])
 
         offset, limit = check_offset_and_limit(result, offset, limit)
@@ -255,11 +265,15 @@ class SignIn(Resource):
         db = get_db()
         result = db.execute_read(get_user_by_user_id, userId)
 
-        def create_user(tx, user_id):
-            return tx.run(f"CREATE (user:User {{userId: '{user_id}'}})")
-
         if result is None:
-            result = db.execute_write(create_user, userId)
+            def create_user(tx, user_id, only_id):
+                return tx.run(f"CREATE (user:User {{userId: '{user_id}', id: {only_id}}})")
+            def get_max_user_id(tx):
+                return tx.run(f"MATCH (user:User) RETURN max(user.id) as maxUserId").single()
+
+            max_user_id = db.execute_read(get_max_user_id)
+
+            result = db.execute_write(create_user, userId, max_user_id['maxUserId'] + 1)
 
         def set_token(tx, user_id, token):
             return tx.run(f"MATCH (user:User) WHERE user.userId = '{user_id}' SET user.token = '{token}'")
