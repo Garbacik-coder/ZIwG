@@ -158,26 +158,31 @@ class _RatedScreenState extends State<RatedScreen> {
                     ),
                   );
                 } else {
-                  if (loading) {
-                    return const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                        ),
-                      ),
-                    );
+                  if (ratedMovies.isNotEmpty) {
+                    final movie = ratedMovies[index - 1];
+                    return MovieTile(movie: movie);
                   } else {
-                    return Container(
-                      padding: const EdgeInsets.all(20),
-                      child: const Text(
-                        "No rated movies",
-                        textScaleFactor: infoScaleFactor,
-                        style: TextStyle(
-                          color: Colors.white,
+                    if (loading) {
+                      return const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-                    );
+                      );
+                    } else {
+                      return Container(
+                        padding: const EdgeInsets.all(20),
+                        child: const Text(
+                          "No rated movies",
+                          textScaleFactor: infoScaleFactor,
+                          style: TextStyle(
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+                    }
                   }
                 }
               },

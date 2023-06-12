@@ -28,6 +28,7 @@ class MovieRecommendationApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: _title,
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.teal[800],

@@ -110,6 +110,7 @@ class _MovieScreenState extends State<MovieScreen> {
             final queryParameters = {
               'rating': rating.toString(),
             };
+            print("given rating ${rating.toString()}");
             final response = await http.post(
               Uri.http('10.0.2.2:8080', '/api/movies/${movie.movieId}/rate',
                   queryParameters),

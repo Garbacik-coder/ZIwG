@@ -36,7 +36,8 @@ class Movie {
       dict["title"],
       dict["description"],
       (dict["genres"] as List).join(", "),
-      dict["rating"]?.toString() ?? "6.9",
+      (dict["rating"] != null ? dict["rating"] as double : 6.9)
+          .toStringAsFixed(1),
       dict["year"].toString(),
       dict["length"],
       dict["imageUrl"] != "jak wyzej"

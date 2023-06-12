@@ -258,10 +258,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     } else {
                       return Container(
                         padding: const EdgeInsets.all(20),
-                        child: const Text(
-                          "Rate at least 3 movies and wait for update.",
+                        child: Text(
+                          isSearchbarFilled
+                              ? "No movies found"
+                              : "Rate at least 3 movies and wait for update.",
                           textScaleFactor: infoScaleFactor,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                           ),
                         ),
