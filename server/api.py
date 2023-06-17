@@ -149,7 +149,7 @@ class Recommended(Resource):
 
         def get_recommended(tx, user_id):
             filterClause = generate_filter_clause(substring, False)
-            return list(tx.run(f"MATCH (movie:Movie)-[is_predicted:IS_PREDICTED]->(user:User) WHERE user.userId = '{user_id}' AND (is_predicted.rejected IS NULL OR is_predicted.rejected <> True) {filterClause}WITH movie ORDER BY is_predicted.prediction DESC OPTIONAL MATCH (movie)-[:IS_GENRE]->(genre:Genre) OPTIONAL MATCH (:User)-[overallRated:RATED]->(movie) RETURN movie, COLLECT(genre.name) as genres, EXISTS((movie)-[:ON_WATCHLIST]->(:User {{userId: '{user_id}'}})) as on_watchlist, avg(overallRated.rating) as overallRated"))
+            return list(tx.run(f"MATCH (movie:Movie)-[is_predicted:IS_PREDICTED]->(user:User) WHERE user.userId = '{user_id}' AND (is_predicted.rejected IS NULL OR is_predicted.rejected <> True) {filterClause}WITH movie ORDER BY is_predicted.prediction DESC OPTIONAL MATCH (:User)-[overallRated:RATED]->(movie) WITH movie, avg(overallRated.rating) AS overallRated OPTIONAL MATCH (movie)-[:IS_GENRE]->(genre:Genre) RETURN movie, COLLECT(genre.name) AS genres, EXISTS((movie)-[:ON_WATCHLIST]->(:User {{userId: '{user_id}'}})) as on_watchlist, overallRated"))
 
         result = db.execute_write(get_recommended, g.user['userId'])
 
@@ -166,7 +166,7 @@ class OnWatchlist(Resource):
 
         def get_on_watchlist(tx, user_id):
             filterClause = generate_filter_clause(substring, False)
-            return list(tx.run(f"MATCH (movie:Movie)-[on:ON_WATCHLIST]->(user:User) WHERE user.userId = '{user_id}' {filterClause}OPTIONAL MATCH (movie)-[:IS_GENRE]->(genre:Genre) OPTIONAL MATCH (:User {{userId: '{user_id}'}})-[rated:RATED]->(movie) OPTIONAL MATCH (:User)-[overallRated:RATED]->(movie) RETURN movie, COLLECT(genre.name) as genres, rated, avg(overallRated.rating) as overallRated"))
+            return list(tx.run(f"MATCH (movie:Movie)-[on:ON_WATCHLIST]->(user:User) WHERE user.userId = '{user_id}' {filterClause}WITH movie OPTIONAL MATCH (:User)-[overallRated:RATED]->(movie) WITH movie, avg(overallRated.rating) as overallRated OPTIONAL MATCH (movie)-[:IS_GENRE]->(genre:Genre) OPTIONAL MATCH (:User {{userId: '{user_id}'}})-[rated:RATED]->(movie) RETURN movie, COLLECT(genre.name) as genres, rated, overallRated"))
 
         db = get_db()
         result = db.execute_write(get_on_watchlist, g.user['userId'])
@@ -184,7 +184,7 @@ class Rated(Resource):
 
         def get_rated(tx, user_id):
             filterClause = generate_filter_clause(substring, False)
-            return list(tx.run(f"MATCH (user:User)-[rated:RATED]->(movie:Movie) WHERE user.userId = '{user_id}' {filterClause}OPTIONAL MATCH (movie)-[:IS_GENRE]->(genre:Genre) OPTIONAL MATCH (:User)-[overallRated:RATED]->(movie) RETURN movie, COLLECT(genre.name) as genres, EXISTS((movie)-[:ON_WATCHLIST]->(:User {{userId: '{user_id}'}})) as on_watchlist, rated, avg(overallRated.rating) as overallRated"))
+            return list(tx.run(f"MATCH (user:User)-[rated:RATED]->(movie:Movie) WHERE user.userId = '{user_id}' {filterClause}WITH movie, rated OPTIONAL MATCH (:User)-[overallRated:RATED]->(movie) WITH movie, rated, avg(overallRated.rating) as overallRated OPTIONAL MATCH (movie)-[:IS_GENRE]->(genre:Genre) RETURN movie, COLLECT(genre.name) as genres, EXISTS((movie)-[:ON_WATCHLIST]->(:User {{userId: '{user_id}'}})) as on_watchlist, rated, overallRated"))
 
         db = get_db()
         result = db.execute_write(get_rated, g.user['userId'])
