@@ -19,9 +19,9 @@ with driver.session() as db:
     for index, row in df.iterrows():
         print(index)
         for i in range(0, MOVIES_NUM):
-            if not np.isnan(row[i]):
+            if not np.isnan(row[str(i)]):
                 user_id = row['user']
                 movie_id = i
-                rating = row[i]
+                rating = row[str(i)]
                 result = db.execute_write(insert_rating, user_id, movie_id, rating)
         

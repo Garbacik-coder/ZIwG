@@ -61,8 +61,11 @@ def close_db(error):
 def serialize_movie(movie, genres, on_watchlist, rated, overallRating):
     rating = None
     if rated is not None:
-        rating = rated['rating']
-    
+        rating = rated['rating'] * 10
+
+    if overallRating is not None:
+        overallRating = overallRating * 10
+
     return {
         'movieId': movie['movieId'],
         'title': movie['title'],
@@ -217,6 +220,7 @@ class Rate(Resource):
     @login_required
     def post(self, movieId):
         rating = request.args.get('rating')
+        rating = rating / 10
 
         def rate_movie(tx, user_id, movie_id, rating):
             return tx.run(f"MATCH (user:User) MATCH (movie:Movie) WHERE user.userId = '{user_id}' AND movie.movieId = {movie_id} CREATE (user)-[rated:RATED {{rating: {rating}}}]->(movie)")
