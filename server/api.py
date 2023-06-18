@@ -124,7 +124,7 @@ class Movies(Resource):
 
         def get_movies(tx, user_id):
             filterClause = generate_filter_clause(substring, True)
-            return list(tx.run(f"MATCH (movie:Movie) {filterClause}OPTIONAL MATCH (movie)-[:IS_GENRE]->(genre:Genre) OPTIONAL MATCH (:User {{userId: '{user_id}'}})-[rated:RATED]->(movie) OPTIONAL MATCH (:User)-[overallRated:RATED]->(movie) RETURN movie, COLLECT(genre.name) as genres, EXISTS((movie)-[:ON_WATCHLIST]->(:User {{userId: '{user_id}'}})) as on_watchlist, rated, avg(overallRated.rating) as overallRated"))
+            return list(tx.run(f"MATCH (movie:Movie) {filterClause}WITH movie OPTIONAL MATCH (:User)-[overallRated:RATED]->(movie) WITH movie, avg(overallRated.rating) as overallRated OPTIONAL MATCH (movie)-[:IS_GENRE]->(genre:Genre) OPTIONAL MATCH (:User {{userId: '{user_id}'}})-[rated:RATED]->(movie) RETURN movie, COLLECT(genre.name) as genres, EXISTS((movie)-[:ON_WATCHLIST]->(:User {{userId: '{user_id}'}})) as on_watchlist, rated, overallRated"))
 
         db = get_db()
         result = db.execute_write(get_movies, g.user['userId'])
@@ -220,7 +220,7 @@ class Rate(Resource):
     @login_required
     def post(self, movieId):
         rating = request.args.get('rating')
-        rating = rating / 10
+        rating = float(rating) / 10.0
 
         def rate_movie(tx, user_id, movie_id, rating):
             return tx.run(f"MATCH (user:User) MATCH (movie:Movie) WHERE user.userId = '{user_id}' AND movie.movieId = {movie_id} CREATE (user)-[rated:RATED {{rating: {rating}}}]->(movie)")
