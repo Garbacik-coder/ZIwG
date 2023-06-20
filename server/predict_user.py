@@ -9,6 +9,8 @@ def get_movies(tx):
 def insert_is_predicted(tx, user_id, movie_id, prediction):
     return list(tx.run(f"MATCH (user:User) MATCH (movie:Movie) WHERE user.id = {user_id} AND movie.movieId = {movie_id} AND NOT (user)-[:RATED]->(movie) CREATE (movie)-[is_predicted:IS_PREDICTED {{prediction: {prediction}}}]->(user)"))
 
+def is_predicted_exists(tx, user_id):
+    return tx.run(f"MATCH (user:User) WHERE user.id = {user_id} RETURN EXISTS((:Movie)-[:IS_PREDICTED]->(user)) as predictionExists").single()
 
 def predict(db, user_id):
     model = keras.models.load_model('zapisany_model3')
@@ -42,6 +44,9 @@ def predict(db, user_id):
     dtf_products['user'] = user_id
     dtf_products['yhat'] = model.predict([dtf_products['user'], dtf_products['product'], dtf_products[features]])
 
-    for index, row in dtf_products.iterrows():
-        result = db.execute_write(insert_is_predicted, user_id, row['product'], row['yhat'])
+    result = db.execute_read(is_predicted_exists, user_id)
+    
+    if result['predictionExists'] is not True:
+        for index, row in dtf_products.iterrows():
+            result = db.execute_write(insert_is_predicted, user_id, row['product'], row['yhat'])
 
