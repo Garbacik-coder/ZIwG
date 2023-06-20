@@ -5,6 +5,7 @@ import pandas as pd
 from functools import wraps
 import re
 from predict_user import predict
+from threading import Thread
 
 DATABASE_USERNAME = 'neo4j'
 DATABASE_PASSWORD = '12345678'
@@ -136,15 +137,7 @@ class Movies(Resource):
 class Recommended(Resource):
     @login_required
     def get(self):
-        def recommended_exists(tx, user_id):
-            return tx.run(f"MATCH (user:User) WHERE user.userId = '{user_id}' RETURN EXISTS ((:Movie)-[:IS_PREDICTED]->(user)) AS exists, user").single()
-        
         db = get_db()
-        
-        exists = db.execute_read(recommended_exists, g.user['userId'])
-        if not exists['exists']:
-            print(exists['user']['id'])
-            predict(db, exists['user']['id'])
 
         offset = try_parse_int(request.args.get('offset'), 0)
         limit = try_parse_int(request.args.get('limit'), 0)
@@ -222,6 +215,9 @@ class Rate(Resource):
         rating = request.args.get('rating')
         rating = float(rating) / 10.0
 
+        def check_if_should_predict(tx, user_id):
+            return tx.run(f"MATCH (user:User) WHERE user.userId = '{user_id}' OPTIONAL MATCH (user)-[rated:RATED]->(:Movie)  RETURN user, EXISTS((:Movie)-[:IS_PREDICTED]->(user)) as is_predicted_exists, count(rated) as ratedCount").single()
+        
         def remove_from_watchlist(tx, user_id, movie_id):
             return tx.run(f"MATCH (movie:Movie)-[on_watchlist:ON_WATCHLIST]->(user:User) WHERE movie.movieId = {movie_id} AND user.userId = '{user_id}' DELETE on_watchlist")
 
@@ -233,9 +229,19 @@ class Rate(Resource):
 
         db = get_db()
 
+        should_predict = db.execute_read(check_if_should_predict, g.user['userId'])
+
         result = db.execute_write(remove_from_watchlist,  g.user['userId'], movieId)
         result = db.execute_write(unpredict, g.user['userId'], movieId)
         result = db.execute_write(rate_movie, g.user['userId'], movieId, rating)
+        
+        def insert_user_prediction():
+            predict(db, should_predict['user']['id'])
+
+        if not should_predict['is_predicted_exists'] and should_predict['ratedCount'] >= 4:
+            predict_user_thread = Thread(target=insert_user_prediction)
+            predict_user_thread.start()
+
         return {}
 
 class Unrate(Resource):
@@ -292,6 +298,8 @@ class SignIn(Resource):
             return tx.run(f"MATCH (user:User) WHERE user.userId = '{user_id}' SET user.token = '{token}'")
 
         result = db.execute_write(set_token, userId, token)
+
+        return {}
 
 api.add_resource(Movies, '/api/movies')
 api.add_resource(Recommended, '/api/movies/recommended')
