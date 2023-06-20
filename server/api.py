@@ -222,10 +222,19 @@ class Rate(Resource):
         rating = request.args.get('rating')
         rating = float(rating) / 10.0
 
+        def remove_from_watchlist(tx, user_id, movie_id):
+            return tx.run(f"MATCH (movie:Movie)-[on_watchlist:ON_WATCHLIST]->(user:User) WHERE movie.movieId = {movie_id} AND user.userId = '{user_id}' DELETE on_watchlist")
+
+        def unpredict(tx, user_id, movie_id):
+            return tx.run(f"MATCH (movie:Movie)-[is_predicted:IS_PREDICTED]->(user:User) WHERE movie.movieId = {movie_id} AND user.userId = '{user_id}' DELETE is_predicted")
+
         def rate_movie(tx, user_id, movie_id, rating):
             return tx.run(f"MATCH (user:User) MATCH (movie:Movie) WHERE user.userId = '{user_id}' AND movie.movieId = {movie_id} CREATE (user)-[rated:RATED {{rating: {rating}}}]->(movie)")
 
         db = get_db()
+
+        result = db.execute_write(remove_from_watchlist,  g.user['userId'], movieId)
+        result = db.execute_write(unpredict, g.user['userId'], movieId)
         result = db.execute_write(rate_movie, g.user['userId'], movieId, rating)
         return {}
 
