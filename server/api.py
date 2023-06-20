@@ -209,6 +209,8 @@ class RemoveFromWatchlist(Resource):
         result = db.execute_write(remove_from_watchlist, movieId, g.user['userId'])
         return {}
 
+alreadyStartedThreads = []
+
 class Rate(Resource):
     @login_required
     def post(self, movieId):
@@ -235,10 +237,12 @@ class Rate(Resource):
         result = db.execute_write(unpredict, g.user['userId'], movieId)
         result = db.execute_write(rate_movie, g.user['userId'], movieId, rating)
         
+        user_id = should_predict['user']['id']
         def insert_user_prediction():
-            predict(db, should_predict['user']['id'])
+            predict(db, user_id)
 
-        if not should_predict['is_predicted_exists'] and should_predict['ratedCount'] >= 4:
+        if not should_predict['is_predicted_exists'] and should_predict['ratedCount'] >= 4 and user_id not in alreadyStartedThreads:
+            alreadyStartedThreads.append(user_id)
             predict_user_thread = Thread(target=insert_user_prediction)
             predict_user_thread.start()
 
